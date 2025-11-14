@@ -35,7 +35,7 @@ class XGBoostGBRModel(GBRModel):
             raise AttributeError(
                 "Plotting training progress for XGBRegressor model is not "
                 "possible, necessary attribute 'evals_result_' is missing. "
-                "This is usually cause by calling MLRModel.rfecv()"
+                "This is usually cause by calling MLRModel.rfecv()",
             )
         evals_result = clf.evals_result()
         train_score = evals_result["validation_0"]["rmse"]
@@ -43,7 +43,7 @@ class XGBoostGBRModel(GBRModel):
         if "test" in self.data:
             test_score = evals_result["validation_1"]["rmse"]
         self._plot_training_progress(
-            train_score, test_score=test_score, filename=filename
+            train_score, test_score=test_score, filename=filename,
         )
 
     def _update_fit_kwargs(self, fit_kwargs):
@@ -75,11 +75,11 @@ class XGBoostGBRModel(GBRModel):
                 f"{self._clf.steps[-1][0]}__regressor__eval_metric": "rmse",
                 f"{self._clf.steps[-1][0]}__regressor__eval_set": eval_set,
                 f"{self._clf.steps[-1][0]}__regressor__sample_weight_eval_set": sample_weights,
-            }
+            },
         )
         logger.debug(
             "Updated keyword arguments of final regressor's fit() function "
             "with training and (if possible) test datasets for evaluation of "
-            "prediction errors"
+            "prediction errors",
         )
         return fit_kwargs

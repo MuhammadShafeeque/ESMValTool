@@ -156,7 +156,7 @@ def make_profiles_plots(
             color = cmap((time - time_0) / (times_float[-1] - time_0))
 
         qplt.plot(
-            cube[time_index, :], cube[time_index, :].coord("depth"), c=color
+            cube[time_index, :], cube[time_index, :].coord("depth"), c=color,
         )
 
         plot_details[str(time_index)] = {
@@ -187,7 +187,7 @@ def make_profiles_plots(
         [
             metadata["dataset"],
             metadata["long_name"],
-        ]
+        ],
     )
     plt.title(title)
 
@@ -200,7 +200,7 @@ def make_profiles_plots(
     # Determine image filename:
     if multi_model:
         path = diagtools.folder(cfg["plot_dir"]) + os.path.basename(
-            filename
+            filename,
         ).replace(".nc", "_profile" + image_extention)
     else:
         path = diagtools.get_image_path(
@@ -251,7 +251,7 @@ def main(cfg):
 
         if obs_key in cfg:
             obs_filename = diagtools.match_model_to_key(
-                obs_key, cfg[obs_key], metadatas
+                obs_key, cfg[obs_key], metadatas,
             )
             if obs_filename:
                 obs_metadata = metadatas[obs_filename]

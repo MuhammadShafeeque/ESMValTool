@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def download_dataset(
-    config, dataset, dataset_info, start_date, end_date, overwrite
+    config, dataset, dataset_info, start_date, end_date, overwrite,
 ):
     """Download dataset.
 
@@ -50,6 +50,6 @@ def download_dataset(
 
     while loop_date <= end_date:
         downloader.download_folder(
-            base_path.format(year=loop_date.year, month=loop_date.month), []
+            base_path.format(year=loop_date.year, month=loop_date.month), [],
         )
         loop_date += relativedelta.relativedelta(months=1)

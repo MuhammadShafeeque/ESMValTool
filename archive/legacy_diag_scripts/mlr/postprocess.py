@@ -125,7 +125,7 @@ def _calculate_lower_error_bound(cfg, squared_error_cube, basepath):
     new_path = basepath.replace(".nc", "_lower_bound.nc")
     io.iris_save(lower_bound, new_path)
     logger.info(
-        "Lower bound of error: %s %s", lower_bound.data, lower_bound.units
+        "Lower bound of error: %s %s", lower_bound.data, lower_bound.units,
     )
     ancestors = _get_ancestors(squared_error_cube)
     _write_provenance(cfg, "Lower bound of", lower_bound, new_path, ancestors)
@@ -138,7 +138,7 @@ def _calculate_real_error(cfg, ref_cube, cov_cube, basepath):
     real_error.data = np.ma.sqrt(real_error.data)
     real_error.var_name = cov_cube.var_name.replace("_cov", "_error")
     real_error.long_name = cov_cube.long_name.replace(
-        "(covariance)", "(error)"
+        "(covariance)", "(error)",
     )
     real_error.units = real_error.units.root(2)
     _convert_units(cfg, real_error)
@@ -166,7 +166,7 @@ def _calculate_upper_error_bound(cfg, squared_error_cube, basepath):
     new_path = basepath.replace(".nc", "_upper_bound.nc")
     io.iris_save(upper_bound, new_path)
     logger.info(
-        "Upper bound of error: %s %s", upper_bound.data, upper_bound.units
+        "Upper bound of error: %s %s", upper_bound.data, upper_bound.units,
     )
     ancestors = _get_ancestors(squared_error_cube)
     _write_provenance(cfg, "Upper bound of", upper_bound, new_path, ancestors)
@@ -178,14 +178,14 @@ def _convert_units(cfg, cube):
     if cfg_settings:
         units_to = cfg_settings
         logger.debug(
-            "Converting units from '%s' to '%s'", cube.units, units_to
+            "Converting units from '%s' to '%s'", cube.units, units_to,
         )
         try:
             cube.convert_units(units_to)
         except ValueError as exc:
             raise ValueError(
                 f"Cannot convert units of cube {cube.summary(shorten=True)} "
-                f"from '{cube.units}' to '{units_to}'"
+                f"from '{cube.units}' to '{units_to}'",
             ) from exc
 
 
@@ -197,13 +197,13 @@ def _collapse_covariance_cube(cfg, cov_cube, ref_cube):
             f"Calculating real error using covariance dataset "
             f"('prediction_output_error') is only possible if all "
             f"{ref_cube.ndim:d} dimensions of the cube are collapsed, got "
-            f"only {len(coords):d} ({coords})"
+            f"only {len(coords):d} ({coords})",
         )
     weights = weights.ravel()
     weights = weights[~np.ma.getmaskarray(ref_cube.data).ravel()]
     weights = np.outer(weights, weights)
     cov_cube = cov_cube.collapsed(
-        cov_cube.coords(dim_coords=True), iris.analysis.SUM, weights=weights
+        cov_cube.coords(dim_coords=True), iris.analysis.SUM, weights=weights,
     )
     cov_cube.units *= units**2
     return cov_cube
@@ -265,7 +265,7 @@ def _estim_cov_differing_shape(cfg, squared_error_cube, cov_est_cube, weights):
             f"Expected identical trailing (rightmost) dimensions of "
             f"'prediction_input' data used to estimate covariance structure "
             f"and 'prediction_output_error' datasets, got {cov_est.shape} and "
-            f"{error.shape}"
+            f"{error.shape}",
         )
 
     # Estimate covariance
@@ -292,7 +292,7 @@ def _estim_cov_identical_shape(squared_error_cube, cov_est_cube, weights):
     logger.info(
         "Estimating true error from covariance derived from "
         "'prediction_input' dataset with same shape as errors "
-        "('prediction_output_error')"
+        "('prediction_output_error')",
     )
     error = np.ma.sqrt(squared_error_cube.data)
     error = np.ma.filled(error, 0.0)
@@ -351,14 +351,14 @@ def _estimate_real_error(cfg, squared_error_cube, cov_est_dataset, basepath):
     if cov_est_cube.ndim < 2:
         raise ValueError(
             f"Expected at least 2D 'prediction_input' dataset for covariance "
-            f"structure estimation, got {cov_est_cube.ndim:d}D dataset"
+            f"structure estimation, got {cov_est_cube.ndim:d}D dataset",
         )
     if cov_est_cube.ndim < squared_error_cube.ndim:
         raise ValueError(
             f"Expected number of dimensions of 'prediction_input' dataset "
             f"used for covariance structure estimation to be greater than or "
             f"equal the number of dimensions of the errors datasets, got "
-            f"{cov_est_cube.ndim:d} and {squared_error_cube.ndim}"
+            f"{cov_est_cube.ndim:d} and {squared_error_cube.ndim}",
         )
 
     # Check if all dimensions are collapsed
@@ -368,17 +368,17 @@ def _estimate_real_error(cfg, squared_error_cube, cov_est_dataset, basepath):
             f"Estimating real error using 'prediction_input' dataset for "
             f"covariance structure estimation is only possible if all "
             f"{squared_error_cube.ndim:d} dimensions of the error cube are "
-            f"collapsed, got only {len(coords):d} ({coords})"
+            f"collapsed, got only {len(coords):d} ({coords})",
         )
 
     # Estimate error
     if cov_est_cube.shape == squared_error_cube.shape:
         error = _estim_cov_identical_shape(
-            squared_error_cube, cov_est_cube, weights
+            squared_error_cube, cov_est_cube, weights,
         )
     else:
         error = _estim_cov_differing_shape(
-            cfg, squared_error_cube, cov_est_cube, weights
+            cfg, squared_error_cube, cov_est_cube, weights,
         )
 
     # Create cube (collapse using dummy operation)
@@ -433,7 +433,7 @@ def _get_all_weights(cfg, cube, power=1):
         # Horizontal coordinates
         if horizontal_coords:
             (horizontal_weights, area_units) = _get_horizontal_weights(
-                cfg, cube, power=power
+                cfg, cube, power=power,
             )
             weights *= horizontal_weights
             if operation == "sum":
@@ -453,7 +453,7 @@ def _get_all_weights(cfg, cube, power=1):
         # Time coordinate
         if "time" in coords:
             (time_weights, time_units) = _get_time_weights(
-                cfg, cube, power=power
+                cfg, cube, power=power,
             )
             if operation == "sum":
                 units *= time_units
@@ -461,7 +461,7 @@ def _get_all_weights(cfg, cube, power=1):
                 weights *= time_weights
             weights /= (
                 _get_normalization_factor(
-                    time_weights, ["time"], cube, normalize=normalize
+                    time_weights, ["time"], cube, normalize=normalize,
                 )
                 ** power
             )
@@ -512,7 +512,7 @@ def _get_covariance_dataset(error_datasets, ref_cube):
         filenames = [d["filename"] for d in cov_datasets]
         raise ValueError(
             f"Expected at most one covariance dataset ({explanation}), got "
-            f"{len(cov_datasets):d}:\n{pformat(filenames)}"
+            f"{len(cov_datasets):d}:\n{pformat(filenames)}",
         )
 
     # Check shape
@@ -523,7 +523,7 @@ def _get_covariance_dataset(error_datasets, ref_cube):
         raise ValueError(
             f"Expected shape of covariance dataset to be "
             f"{(ref_size, ref_size)}, got {cov_cube.shape} (after removal of "
-            f"all missing values)"
+            f"all missing values)",
         )
     return (cov_cube, other_datasets)
 
@@ -591,7 +591,7 @@ def _identical_trailing_dimensions(larger_array, smaller_array):
         raise ValueError(
             f"Expected array with higher number of dimensions as first "
             f"argument, got {larger_array.ndim:d}D array as first argument, "
-            f"{smaller_array.ndim:d}D array as second"
+            f"{smaller_array.ndim:d}D array as second",
         )
     return larger_array.shape[-smaller_array.ndim :] == smaller_array.shape
 
@@ -634,7 +634,7 @@ def postprocess_errors(cfg, ref_cube, error_datasets, cov_estim_datasets):
 
     # Extract covariance
     (cov_cube, error_datasets) = _get_covariance_dataset(
-        error_datasets, ref_cube
+        error_datasets, ref_cube,
     )
 
     # Extract squared errors
@@ -649,7 +649,7 @@ def postprocess_errors(cfg, ref_cube, error_datasets, cov_estim_datasets):
         squared_error_cube.data += var
         logger.debug(
             "Added variance calculated from covariance to squared error "
-            "datasets"
+            "datasets",
         )
         if not error_datasets:
             error_datasets = True
@@ -666,7 +666,7 @@ def postprocess_errors(cfg, ref_cube, error_datasets, cov_estim_datasets):
         # Estimated real error using estimated covariance
         if cov_estim_datasets:
             _estimate_real_error(
-                cfg, squared_error_cube, cov_estim_datasets[0], basepath
+                cfg, squared_error_cube, cov_estim_datasets[0], basepath,
             )
 
     # Real error
@@ -677,7 +677,7 @@ def postprocess_errors(cfg, ref_cube, error_datasets, cov_estim_datasets):
 def postprocess_mean(cfg, cube, data):
     """Postprocess mean prediction cube."""
     logger.info(
-        "Postprocessing mean prediction cube %s", cube.summary(shorten=True)
+        "Postprocessing mean prediction cube %s", cube.summary(shorten=True),
     )
     cube = _collapse_regular_cube(cfg, cube)
     _convert_units(cfg, cube)
@@ -694,12 +694,12 @@ def _reshape_covariance(cov_est, error, dim_map):
             f"Dimension mapping for covariance estimation "
             f"'cov_estimate_dim_map' needs to cover all dimensions of "
             f"'prediction_output_error' cubes with shape {error.shape}, "
-            f"got {dim_map}"
+            f"got {dim_map}",
         )
     if len(set(dim_map)) != len(dim_map):
         raise ValueError(
             f"Duplicate dimensions in 'cov_estimate_dim_map' are not "
-            f"allowed, got {dim_map}"
+            f"allowed, got {dim_map}",
         )
     logger.debug(
         "Reshaping 'prediction_input' with shape %s to contain dimensions "
@@ -717,7 +717,7 @@ def _reshape_covariance(cov_est, error, dim_map):
             raise ValueError(
                 f"Dimensional index {dim:d} in 'cov_estimate_dim_map' is out "
                 f"of range for {cov_est.ndim:d}D 'prediction_input' dataset "
-                f"used for covariance estimation"
+                f"used for covariance estimation",
             )
         indices.remove(dim)
         indices.append(dim)
@@ -728,7 +728,7 @@ def _reshape_covariance(cov_est, error, dim_map):
     for idx in range(cov_est.ndim):
         dim_map_for_broadcasting.append(indices.index(idx))
     cov_est = iris.util.broadcast_to_shape(
-        cov_est, new_shape, dim_map_for_broadcasting
+        cov_est, new_shape, dim_map_for_broadcasting,
     )
     logger.info(
         "Reshaped 'prediction_input' for covariance estimation to %s",
@@ -748,7 +748,7 @@ def split_datasets(datasets, tag, pred_name):
         raise ValueError(
             f"Expected exactly one 'prediction_output' dataset for tag "
             f"'{tag}' of prediction '{pred_name}', got {len(mean):d}:\n"
-            f"{pformat(filenames)}"
+            f"{pformat(filenames)}",
         )
     logger.info(
         "Found mean prediction dataset ('prediction_output') for tag '%s' of "
@@ -793,7 +793,7 @@ def split_datasets(datasets, tag, pred_name):
             raise ValueError(
                 f"Expected at most one 'prediction_input' dataset for tag "
                 f"'{tag}' of prediction '{pred_name}', got "
-                f"{len(cov_estimation):d}:\n{pformat(filenames)}"
+                f"{len(cov_estimation):d}:\n{pformat(filenames)}",
             )
         else:
             logger.info(
@@ -816,7 +816,7 @@ def main(cfg):
         module="iris",
     )
     input_data = mlr.get_input_data(
-        cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore")
+        cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore"),
     )
 
     # Check cfg
@@ -831,7 +831,7 @@ def main(cfg):
         for pred_name, datasets in grouped_data.items():
             logger.info("Processing prediction '%s'", pred_name)
             (dataset, error_datasets, cov_estim_datastets) = split_datasets(
-                datasets, tag, pred_name
+                datasets, tag, pred_name,
             )
 
             # Extract cubes
@@ -844,7 +844,7 @@ def main(cfg):
             if cube.ndim < 1:
                 raise ValueError(
                     f"Postprocessing scalar dataset '{dataset['filename']}' "
-                    f"not supported yet"
+                    f"not supported yet",
                 )
 
             # Process mean prediction

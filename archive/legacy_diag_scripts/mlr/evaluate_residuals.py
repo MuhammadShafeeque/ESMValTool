@@ -98,7 +98,7 @@ def _plot_boxplot(cfg, data_frame, plot_name):
 
 
 def _write_provenance(
-    cfg, data_frame, plot_path, title, ancestors, **cube_kwargs
+    cfg, data_frame, plot_path, title, ancestors, **cube_kwargs,
 ):
     """Write provenance information."""
     cube = ec.pandas_object_to_cube(data_frame, **cube_kwargs)
@@ -201,7 +201,7 @@ def main(cfg):
     """Run the diagnostic."""
     cfg = deepcopy(cfg)
     cfg.setdefault(
-        "weighted_samples", {"area_weighted": True, "time_weighted": True}
+        "weighted_samples", {"area_weighted": True, "time_weighted": True},
     )
     sns.set_theme(**cfg.get("seaborn_settings", {}))
 

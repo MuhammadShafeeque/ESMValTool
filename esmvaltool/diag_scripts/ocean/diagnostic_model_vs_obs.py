@@ -64,7 +64,7 @@ logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 
 def add_map_subplot(
-    subplot, cube, nspace, title="", cmap="", extend="neither", log=False
+    subplot, cube, nspace, title="", cmap="", extend="neither", log=False,
 ):
     """Add a map subplot to the current pyplot figure.
 
@@ -111,7 +111,7 @@ def add_map_subplot(
         )
         cbar = plt.colorbar(orientation="horizontal")
         cbar.set_ticks(
-            [nspace.min(), (nspace.max() + nspace.min()) / 2.0, nspace.max()]
+            [nspace.min(), (nspace.max() + nspace.min()) / 2.0, nspace.max()],
         )
 
     plt.gca().coastlines()
@@ -194,10 +194,10 @@ def make_model_vs_obs_plots(cfg, metadata, model_filename, obs_filename):
 
         n_points = 12
         linspace12 = np.linspace(
-            zrange12[0], zrange12[1], n_points, endpoint=True
+            zrange12[0], zrange12[1], n_points, endpoint=True,
         )
         linspace3 = np.linspace(
-            zrange3[0], zrange3[1], n_points, endpoint=True
+            zrange3[0], zrange3[1], n_points, endpoint=True,
         )
         logspace4 = np.logspace(-1.0, 1.0, 12, endpoint=True)
 
@@ -275,7 +275,7 @@ def rounds_sig(value, sig=3):
         The number of significant figures.
 
     Returns
-    ----------
+    -------
     str:
         The rounded output string.
     """
@@ -284,13 +284,13 @@ def rounds_sig(value, sig=3):
     if value < 0.0:
         value = abs(value)
         return str(
-            -1.0 * round(value, sig - int(math.floor(math.log10(value))) - 1)
+            -1.0 * round(value, sig - int(math.floor(math.log10(value))) - 1),
         )
     return str(round(value, sig - int(math.floor(math.log10(value))) - 1))
 
 
 def add_linear_regression(
-    plot_axes, arr_x, arr_y, showtext=True, add_diagonal=False, extent=None
+    plot_axes, arr_x, arr_y, showtext=True, add_diagonal=False, extent=None,
 ):
     """Add a straight line fit to an axis.
 
@@ -315,7 +315,7 @@ def add_linear_regression(
         r"$\^\beta_1$ = " + rounds_sig(beta1),
         r"R = " + rounds_sig(r_value),
         r"P = " + rounds_sig(p_value),
-        r"N = " + str(int(len(arr_x))),
+        r"N = " + str(len(arr_x)),
     ]
     thetext = "\n".join(texts)
 
@@ -331,7 +331,7 @@ def add_linear_regression(
 
     if extent is None:
         x_values = np.arange(
-            arr_x.min(), arr_x.max(), (arr_x.max() - arr_x.min()) / 20.0
+            arr_x.min(), arr_x.max(), (arr_x.max() - arr_x.min()) / 20.0,
         )
         y_values = [beta0 + beta1 * a for a in x_values]
     else:
@@ -517,7 +517,7 @@ def main(cfg):
             metadatas,
         )
         obs_filename = diagtools.match_model_to_key(
-            "observational_dataset", cfg[model_type], metadatas
+            "observational_dataset", cfg[model_type], metadatas,
         )
         for filename in sorted(metadatas.keys()):
             if filename == obs_filename:

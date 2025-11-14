@@ -46,8 +46,8 @@ class SklearnGBRModel(GBRModel):
                         y_test,
                         y_pred,
                         sample_weight=sample_weights,
-                    )
+                    ),
                 )
         self._plot_training_progress(
-            train_score, test_score=test_score, filename=filename
+            train_score, test_score=test_score, filename=filename,
         )

@@ -4,7 +4,7 @@ from esmvaltool.cmorizers.data.downloaders.wget import WGetDownloader
 
 
 def download_dataset(
-    config, dataset, dataset_info, start_date, end_date, overwrite
+    config, dataset, dataset_info, start_date, end_date, overwrite,
 ):
     """Download dataset.
 

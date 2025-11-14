@@ -364,12 +364,12 @@ class MLRModel:
                     else os.path.relpath(root, models_path)
                 )
                 module = os.path.join(
-                    rel_path, os.path.splitext(model_file)[0]
+                    rel_path, os.path.splitext(model_file)[0],
                 )
                 try:
                     importlib.import_module(
                         f"esmvaltool.diag_scripts.mlr.models."
-                        f"{module.replace(os.sep, '.')}"
+                        f"{module.replace(os.sep, '.')}",
                     )
                 except ImportError:
                     pass
@@ -398,12 +398,12 @@ class MLRModel:
                 f"subclasses of {cls} in new files under 'esmvaltool/"
                 f"diag_scripts/mlr/models/' decorated by 'esmvaltool."
                 f"diag_scripts.mlr.models.{cls.__name__}."
-                f"register_mlr_model()'"
+                f"register_mlr_model()'",
             )
         if mlr_model_type not in cls._MODELS:
             raise NotImplementedError(
                 f"MLR model type '{mlr_model_type}' not found in 'esmvaltool/"
-                f"diag_scripts/mlr/models/'"
+                f"diag_scripts/mlr/models/'",
             )
         subclass = cls._MODELS[mlr_model_type]
         logger.info(
@@ -455,10 +455,10 @@ class MLRModel:
 
         # Adapt output directories
         self._cfg["mlr_work_dir"] = os.path.join(
-            self._cfg["work_dir"], self._cfg["sub_dir"]
+            self._cfg["work_dir"], self._cfg["sub_dir"],
         )
         self._cfg["mlr_plot_dir"] = os.path.join(
-            self._cfg["plot_dir"], self._cfg["sub_dir"]
+            self._cfg["plot_dir"], self._cfg["sub_dir"],
         )
         if not os.path.exists(self._cfg["mlr_work_dir"]):
             os.makedirs(self._cfg["mlr_work_dir"])
@@ -510,7 +510,7 @@ class MLRModel:
             self._check_fit_status("Calculating features after preprocessing")
         except NotFittedError:
             self._clf.fit_transformers_only(
-                x_train, y_train, **self.fit_kwargs
+                x_train, y_train, **self.fit_kwargs,
             )
         x_trans = self._clf.transform_only(x_train)
         features = self.features
@@ -521,7 +521,7 @@ class MLRModel:
             n_features_may_drop = True
         if "pca" in self._clf.named_steps:
             categorical_features = np.array(
-                [f for f in features if f in self.categorical_features]
+                [f for f in features if f in self.categorical_features],
             )
             n_numerical_features = x_trans.shape[1] - categorical_features.size
             features = [
@@ -624,14 +624,14 @@ class MLRModel:
                 keys_to_remove.append(key)
         for key in keys_to_remove:
             logger.warning(
-                "Fit parameter '%s' is not supported for efecv()", key
+                "Fit parameter '%s' is not supported for efecv()", key,
             )
             fit_kwargs.pop(key)
 
         # Get other keyword arguments
         kwargs = deepcopy(kwargs)
         verbosity_kwargs = self._get_verbosity_parameters(
-            cross_val_score_weighted
+            cross_val_score_weighted,
         )
         for key, val in verbosity_kwargs.items():
             kwargs.setdefault(key, val)
@@ -716,7 +716,7 @@ class MLRModel:
 
         # Create MLR model with desired parameters and fit it
         self._clf.fit(
-            self.data["train"].x, self.data["train"].y, **self.fit_kwargs
+            self.data["train"].x, self.data["train"].y, **self.fit_kwargs,
         )
         self._parameters = self._get_clf_parameters()
         logger.info(
@@ -778,14 +778,14 @@ class MLRModel:
             if feature not in self.features:
                 raise ValueError(
                     f"Got invalid feature '{feature}', expected one of "
-                    f"{self.features}"
+                    f"{self.features}",
                 )
             ancestors.extend(
                 [
                     d["filename"]
                     for d in self._datasets["feature"]
                     if d["tag"] == feature
-                ]
+                ],
             )
 
         # Prediction files
@@ -796,30 +796,30 @@ class MLRModel:
             if pred_name not in available_pred_names:
                 raise ValueError(
                     f"Got invalid prediction name '{pred_name}', expected one "
-                    f"of {available_pred_names}"
+                    f"of {available_pred_names}",
                 )
             ancestors.extend(
                 [
                     d["filename"]
                     for d in self._datasets["prediction_input"][pred_name]
-                ]
+                ],
             )
             ancestors.extend(
                 [
                     d["filename"]
                     for d in self._datasets["prediction_input_error"].get(
-                        pred_name, []
+                        pred_name, [],
                     )
-                ]
+                ],
             )
             if prediction_reference:
                 ancestors.extend(
                     [
                         d["filename"]
                         for d in self._datasets["prediction_reference"].get(
-                            pred_name, []
+                            pred_name, [],
                         )
-                    ]
+                    ],
                 )
 
         return ancestors
@@ -851,7 +851,7 @@ class MLRModel:
         if data_type not in allowed_types:
             raise TypeError(
                 f"'{data_type}' is not an allowed type, specify one of "
-                f"'{allowed_types}'"
+                f"'{allowed_types}'",
             )
         if data_type not in self.data:
             raise TypeError(f"No '{data_type}' data available")
@@ -942,7 +942,7 @@ class MLRModel:
 
         # Get keyword arguments
         (cv_kwargs, fit_kwargs) = self._get_cv_estimator_kwargs(
-            GridSearchCV, **kwargs
+            GridSearchCV, **kwargs,
         )
 
         # Create and fit GridSearchCV instance
@@ -955,7 +955,7 @@ class MLRModel:
         elif hasattr(clf, "best_params_"):
             self.update_parameters(**clf.best_params_)
             self._clf.fit(
-                self.data["train"].x, self.data["train"].y, **fit_kwargs
+                self.data["train"].x, self.data["train"].y, **fit_kwargs,
             )
         else:
             raise ValueError(
@@ -963,7 +963,7 @@ class MLRModel:
                 "(neither using 'best_estimator_' nor 'best_params_'), "
                 "adapt keyword arguments accordingly (see "
                 "https://scikit-learn.org/stable/modules/generated/"
-                "sklearn.model_selection.GridSearchCV.html for more help)"
+                "sklearn.model_selection.GridSearchCV.html for more help)",
             )
         self._parameters = self._get_clf_parameters()
         logger.info(
@@ -1015,7 +1015,7 @@ class MLRModel:
                 f"Plotting lineplot of MLR model using 'plot_1d_model' is not "
                 f"possible, MLR model {self._cfg['mlr_model_name']} contains "
                 f"more than one feature ({n_features:d} features: "
-                f"{self.features})"
+                f"{self.features})",
             )
         feature = self.features[0]
         logger.info(
@@ -1050,8 +1050,8 @@ class MLRModel:
                     self.data["all"].x[feature].values.min(),
                     self.data["all"].x[feature].values.max(),
                     n_points,
-                )
-            }
+                ),
+            },
         )
         y_pred = self._clf.predict(x_lin)
         x_lin_1d = x_lin.values[:, 0]
@@ -1131,7 +1131,7 @@ class MLRModel:
         # are not used.
         x_train = self.get_x_array("train", impute_nans=True)
         verbosity = self._get_verbosity_parameters(
-            PartialDependenceDisplay.from_estimator
+            PartialDependenceDisplay.from_estimator,
         )
         for feature_name in self.features:
             logger.debug("Plotting partial dependence of '%s'", feature_name)
@@ -1288,7 +1288,7 @@ class MLRModel:
             },
         )
         cube.add_aux_coord(
-            self._get_data_type_coord(np.concatenate(data_types)), 0
+            self._get_data_type_coord(np.concatenate(data_types)), 0,
         )
         self._write_plot_provenance(
             cube,
@@ -1381,7 +1381,7 @@ class MLRModel:
             },
         )
         cube.add_aux_coord(
-            self._get_data_type_coord(np.concatenate(data_types)), 0
+            self._get_data_type_coord(np.concatenate(data_types)), 0,
         )
         self._write_plot_provenance(
             cube,
@@ -1423,7 +1423,7 @@ class MLRModel:
         data_types = []
         for data_type in data_to_plot:
             logger.debug(
-                "Plotting residuals histogram of '%s' data", data_type
+                "Plotting residuals histogram of '%s' data", data_type,
             )
             x_data = self.data[data_type].x
             y_pred = self._clf.predict(x_data)
@@ -1431,7 +1431,7 @@ class MLRModel:
             y_res = self._get_residuals(y_true, y_pred)
             bins = self._get_centralized_bins(y_res, n_bins=20)
             hist = axes.hist(
-                y_res, bins=bins, **self._get_plot_kwargs(data_type)
+                y_res, bins=bins, **self._get_plot_kwargs(data_type),
             )
 
             # Collect data
@@ -1477,7 +1477,7 @@ class MLRModel:
             },
         )
         cube.add_aux_coord(
-            self._get_data_type_coord(np.concatenate(data_types)), 0
+            self._get_data_type_coord(np.concatenate(data_types)), 0,
         )
         self._write_plot_provenance(
             cube,
@@ -1516,7 +1516,7 @@ class MLRModel:
         data_types = []
         for data_type in data_to_plot:
             logger.debug(
-                "Plotting residuals distribution of '%s' data", data_type
+                "Plotting residuals distribution of '%s' data", data_type,
             )
             x_data = self.data[data_type].x
             y_pred = self._clf.predict(x_data)
@@ -1526,7 +1526,7 @@ class MLRModel:
 
             # Collect data
             data_types.append(
-                np.full(axes.lines[-1].get_xdata().shape, data_type)
+                np.full(axes.lines[-1].get_xdata().shape, data_type),
             )
 
         # Plot appearance
@@ -1567,7 +1567,7 @@ class MLRModel:
             },
         )
         cube.add_aux_coord(
-            self._get_data_type_coord(np.concatenate(data_types)), 0
+            self._get_data_type_coord(np.concatenate(data_types)), 0,
         )
         self._write_plot_provenance(
             cube,
@@ -1652,7 +1652,7 @@ class MLRModel:
                 },
             )
             ancestors = self.get_ancestors(
-                features=[feature], prediction_names=[]
+                features=[feature], prediction_names=[],
             )
             self._write_plot_provenance(
                 cube,
@@ -1728,7 +1728,7 @@ class MLRModel:
 
             # Prediction
             (x_pred, x_err, y_ref, x_cube) = self._extract_prediction_input(
-                pred_name
+                pred_name,
             )
             pred_dict = self._get_prediction_dict(
                 pred_name,
@@ -1749,7 +1749,7 @@ class MLRModel:
                 dtype=self._cfg["dtype"],
             )
             self._data["pred"][pred_name] = pd.concat(
-                [x_pred, y_pred], axis=1, keys=["x", "y"]
+                [x_pred, y_pred], axis=1, keys=["x", "y"],
             )
 
             # Save prediction cubes
@@ -1871,7 +1871,7 @@ class MLRModel:
                         "",
                         PCA(random_state=self.random_state),
                         numerical_features_idx,
-                    )
+                    ),
                 ],
                 remainder="passthrough",
             )
@@ -1887,7 +1887,7 @@ class MLRModel:
         else:
             y_scaler = StandardScaler(with_mean=False, with_std=False)
         transformed_target_regressor = AdvancedTransformedTargetRegressor(
-            transformer=y_scaler, regressor=final_regressor
+            transformer=y_scaler, regressor=final_regressor,
         )
         steps.append(("final", transformed_target_regressor))
 
@@ -1941,7 +1941,7 @@ class MLRModel:
 
         # Get keyword arguments
         (cv_kwargs, fit_kwargs) = self._get_cv_estimator_kwargs(
-            AdvancedRFECV, **kwargs
+            AdvancedRFECV, **kwargs,
         )
         fit_kwargs = deepcopy(fit_kwargs)
         keys_to_remove = []
@@ -1950,14 +1950,14 @@ class MLRModel:
                 keys_to_remove.append(key)
         for key in keys_to_remove:
             logger.warning(
-                "Fit parameter '%s' is not supported for rfecv()", key
+                "Fit parameter '%s' is not supported for rfecv()", key,
             )
             fit_kwargs.pop(key)
 
         # Create and fit AdvancedRFECV instance
         rfecv = AdvancedRFECV(self._clf, **cv_kwargs)
         rfecv.fit(
-            self.data["train"].x, self.get_y_array("train"), **fit_kwargs
+            self.data["train"].x, self.get_y_array("train"), **fit_kwargs,
         )
 
         # Add feature selection step to pipeline
@@ -2045,7 +2045,7 @@ class MLRModel:
                 new_params[key] = val
             else:
                 raise ValueError(
-                    f"'{key}' is not a valid parameter for the pipeline"
+                    f"'{key}' is not a valid parameter for the pipeline",
                 )
         self._clf.set_params(**new_params)
         self._parameters = self._get_clf_parameters()
@@ -2082,7 +2082,7 @@ class MLRModel:
             raise NotImplementedError(
                 f"No MLR model type specified, please use the factory "
                 f"function 'esmvaltool.diag_scripts.mlr.models.{class_name}."
-                f"create()' to initialize this class"
+                f"create()' to initialize this class",
             )
 
     def _check_cube_dimensions(self, cube, ref_cube, text=None):
@@ -2094,7 +2094,7 @@ class MLRModel:
                 raise ValueError(
                     f"Expected only cubes with shapes {allowed_shapes} when "
                     f"option 'accept_only_scalar_data' is set to 'True', got "
-                    f"{cube.shape}{msg}"
+                    f"{cube.shape}{msg}",
                 )
         else:
             if ref_cube is None:
@@ -2105,7 +2105,7 @@ class MLRModel:
                     f"{cube.shape}. Consider regridding, pre-selecting data "
                     f"at class initialization (argument 'input_datasets') or "
                     f"the options 'broadcast_from' or 'group_datasets_by_"
-                    f"attributes'"
+                    f"attributes'",
                 )
             cube_coords = cube.coords(dim_coords=True)
             ref_coords = ref_cube.coords(dim_coords=True)
@@ -2151,7 +2151,7 @@ class MLRModel:
             if not self._cfg.get("allow_missing_features"):
                 raise ValueError(
                     f"{var_type} '{tag}'{msg} not found, use 'allow_missing_"
-                    f"features' to ignore this"
+                    f"features' to ignore this",
                 )
             logger.info(
                 "Ignored missing %s '%s'%s since 'allow_missing_features' is "
@@ -2166,7 +2166,7 @@ class MLRModel:
                 f"{var_type} '{tag}'{msg} not unique, consider adapting the "
                 f"argument 'input_datasets' at class initialization to "
                 f"pre-select datasets or specify suitable attributes to group "
-                f"datasets with the option 'group_datasets_by_attributes'"
+                f"datasets with the option 'group_datasets_by_attributes'",
             )
         if var_type in ("label", "prediction_reference"):
             units = self.label_units
@@ -2175,7 +2175,7 @@ class MLRModel:
         if units != Unit(datasets[0]["units"]):
             raise ValueError(
                 f"Expected units '{units}' for {var_type} '{tag}'{msg}, got "
-                f"'{datasets[0]['units']}'"
+                f"'{datasets[0]['units']}'",
             )
         return datasets[0]
 
@@ -2191,7 +2191,7 @@ class MLRModel:
             raise NotFittedError(
                 f"{text} not possible, MLR model {self._CLF_TYPE} is not "
                 f"fitted yet, call fit(), grid_search_cv() or rfecv() "
-                f"first"
+                f"first",
             ) from exc
 
     def _estimate_mlr_model_error(self, target_length, strategy):
@@ -2208,7 +2208,7 @@ class MLRModel:
                     f"'save_mlr_model_error' using strategy 'test' is not "
                     f"possible because no test data is available ('test_size' "
                     f"was set to '{self._cfg['test_size']}' during class "
-                    f"initialization)"
+                    f"initialization)",
                 )
             y_pred = self._clf.predict(self.data["test"].x)
             error = metrics.mean_squared_error(
@@ -2225,7 +2225,7 @@ class MLRModel:
                 raise ValueError(
                     f"Expected 'test', 'logo' or an integer as strategy for "
                     f"estimating MLR model error (argument "
-                    f"'save_mlr_model_error'), got '{strategy}'"
+                    f"'save_mlr_model_error'), got '{strategy}'",
                 )
             x_data = self.data["train"].x
             y_data = self.get_y_array("train")
@@ -2256,7 +2256,7 @@ class MLRModel:
     def _extract_features_and_labels(self):
         """Extract feature and label data points from training data."""
         (x_data, _, sample_weights) = self._extract_x_data(
-            self._datasets["feature"], "feature"
+            self._datasets["feature"], "feature",
         )
         y_data = self._extract_y_data(self._datasets["label"], "label")
 
@@ -2266,7 +2266,7 @@ class MLRModel:
                 f"Got differing point(s) for features and labels ("
                 f"{len(x_data.index):d} feature points and "
                 f"{len(y_data.index):d} label points):\n"
-                f"{x_data.index.difference(y_data.index)}"
+                f"{x_data.index.difference(y_data.index)}",
             )
         logger.info(
             "Found %i raw input data point(s) with data type '%s'",
@@ -2276,12 +2276,12 @@ class MLRModel:
 
         # Remove missing values in labels
         (x_data, y_data, sample_weights) = self._remove_missing_labels(
-            x_data, y_data, sample_weights
+            x_data, y_data, sample_weights,
         )
 
         # Remove missing values in features (if desired)
         (x_data, y_data, sample_weights) = self._remove_missing_features(
-            x_data, y_data, sample_weights
+            x_data, y_data, sample_weights,
         )
 
         return (x_data, y_data, sample_weights)
@@ -2317,7 +2317,7 @@ class MLRModel:
                         f"prediction output ({len(x_pred.index):d} "
                         f"prediction input points and {len(y_ref.index):d} "
                         f"prediction output points):\n"
-                        f"{x_pred.index.difference(y_ref.index)}"
+                        f"{x_pred.index.difference(y_ref.index)}",
                     )
                 logger.info(
                     "Found %i raw prediction output data point(s) with data "
@@ -2345,7 +2345,7 @@ class MLRModel:
                     f"prediction input error ({len(x_pred.index):d} "
                     f"prediction input points and {len(x_err.index):d} "
                     f"prediction input error points):\n"
-                    f"{x_pred.index.difference(x_err.index)}"
+                    f"{x_pred.index.difference(x_err.index)}",
                 )
             logger.info(
                 "Found %i raw prediction input error data point(s) with data "
@@ -2356,7 +2356,7 @@ class MLRModel:
 
         # Remove missing values if necessary
         (x_pred, x_err, y_ref, mask) = self._remove_missing_pred_input(
-            x_pred, x_err, y_ref
+            x_pred, x_err, y_ref,
         )
 
         # Create cube with appropriate mask for output
@@ -2376,7 +2376,7 @@ class MLRModel:
         if var_type not in allowed_types:
             raise ValueError(
                 f"Excepted one of '{allowed_types}' for 'var_type', got "
-                f"'{var_type}'"
+                f"'{var_type}'",
             )
         x_data_for_groups = []
         x_cube = None
@@ -2393,7 +2393,7 @@ class MLRModel:
             groups = [None]
         for group_attr in groups:
             group_datasets = select_metadata(
-                datasets, group_attribute=group_attr
+                datasets, group_attribute=group_attr,
             )
             if group_attr is not None:
                 logger.info("Loading '%s' data of '%s'", var_type, group_attr)
@@ -2401,7 +2401,7 @@ class MLRModel:
             if not group_datasets:
                 raise ValueError(f"No '{var_type}' data{msg} found")
             (group_data, x_cube, weights) = self._get_x_data_for_group(
-                group_datasets, var_type, group_attr
+                group_datasets, var_type, group_attr,
             )
             x_data_for_groups.append(group_data)
 
@@ -2413,7 +2413,7 @@ class MLRModel:
         if sample_weights_for_groups is not None:
             sample_weights = pd.concat(sample_weights_for_groups)
             sample_weights.index = pd.MultiIndex.from_tuples(
-                sample_weights.index, names=self._get_multiindex_names()
+                sample_weights.index, names=self._get_multiindex_names(),
             )
             logger.info(
                 "Successfully calculated sample weights for training data "
@@ -2437,7 +2437,7 @@ class MLRModel:
         # Convert index back to MultiIndex
         x_data = pd.concat(x_data_for_groups)
         x_data.index = pd.MultiIndex.from_tuples(
-            x_data.index, names=self._get_multiindex_names()
+            x_data.index, names=self._get_multiindex_names(),
         )
 
         return (x_data, x_cube, sample_weights)
@@ -2448,7 +2448,7 @@ class MLRModel:
         if var_type not in allowed_types:
             raise ValueError(
                 f"Excepted one of '{allowed_types}' for 'var_type', got "
-                f"'{var_type}'"
+                f"'{var_type}'",
             )
         y_data_for_groups = []
 
@@ -2463,10 +2463,10 @@ class MLRModel:
                 logger.info("Loading '%s' data of '%s'", var_type, group_attr)
             msg = "" if group_attr is None else f" for '{group_attr}'"
             group_datasets = select_metadata(
-                datasets, group_attribute=group_attr
+                datasets, group_attribute=group_attr,
             )
             dataset = self._check_dataset(
-                group_datasets, var_type, self.label, msg
+                group_datasets, var_type, self.label, msg,
             )
             if dataset is None:
                 return None
@@ -2484,7 +2484,7 @@ class MLRModel:
         # Convert index back to MultiIndex
         y_data = pd.concat(y_data_for_groups)
         y_data.index = pd.MultiIndex.from_tuples(
-            y_data.index, names=self._get_multiindex_names()
+            y_data.index, names=self._get_multiindex_names(),
         )
 
         return y_data
@@ -2502,7 +2502,7 @@ class MLRModel:
             target_shape,
         )
         broadcasted_data = iris.util.broadcast_to_shape(
-            data_to_broadcast, target_shape, dataset["broadcast_from"]
+            data_to_broadcast, target_shape, dataset["broadcast_from"],
         )
         new_cube = ref_cube.copy(np.ma.masked_invalid(broadcasted_data))
         for idx in dataset["broadcast_from"]:
@@ -2525,7 +2525,7 @@ class MLRModel:
                 raise ValueError(
                     f"Extracting color-coded feature colors is not possible "
                     f"since features changed after preprocessing, before: "
-                    f"{self.features}, after: {features}"
+                    f"{self.features}, after: {features}",
                 )
             colors = {}
             corrs = self.data["train"][["x", "y"]].corr()
@@ -2564,11 +2564,11 @@ class MLRModel:
         pred_name_str = self._get_name(pred_name)
         datasets = self._datasets["prediction_input"][pred_name]
         (units, types) = self._get_features_of_datasets(
-            datasets, "prediction_input", pred_name
+            datasets, "prediction_input", pred_name,
         )
 
         # Mark categorical variables
-        categorical = {feature: False for feature in types}
+        categorical = dict.fromkeys(types, False)
         for tag in self._cfg.get("categorical_features", []):
             if tag in categorical:
                 logger.debug("Treating '%s' as categorical feature", tag)
@@ -2576,14 +2576,14 @@ class MLRModel:
             else:
                 raise ValueError(
                     f"Cannot treat '{tag}' as categorical variable, feature "
-                    f"not found"
+                    f"not found",
                 )
 
         # Check if features were found
         if not units:
             raise ValueError(
                 f"No features for 'prediction_input' data for prediction "
-                f"'{pred_name_str}' found"
+                f"'{pred_name_str}' found",
             )
 
         # Check for wrong options
@@ -2591,23 +2591,23 @@ class MLRModel:
             if "broadcasted" in types.values():
                 raise TypeError(
                     "The use of 'broadcast_from' is not possible if "
-                    "'accept_only_scalar_data' is given"
+                    "'accept_only_scalar_data' is given",
                 )
             if "coordinate" in types.values():
                 raise TypeError(
                     "The use of 'coords_as_features' is not possible if "
-                    "'accept_only_scalar_data' is given"
+                    "'accept_only_scalar_data' is given",
                 )
 
         # Convert to DataFrame and sort it
         units = pd.DataFrame.from_dict(
-            units, orient="index", columns=["units"]
+            units, orient="index", columns=["units"],
         )
         types = pd.DataFrame.from_dict(
-            types, orient="index", columns=["types"]
+            types, orient="index", columns=["types"],
         )
         categorical = pd.DataFrame.from_dict(
-            categorical, orient="index", columns=["categorical"]
+            categorical, orient="index", columns=["categorical"],
         )
         features = pd.concat([units, types, categorical], axis=1).sort_index()
 
@@ -2650,11 +2650,11 @@ class MLRModel:
             if cube is None:
                 raise ValueError(
                     f"Expected at least one '{var_type}' dataset for "
-                    f" prediction '{pred_name_str}'"
+                    f" prediction '{pred_name_str}'",
                 )
             raise ValueError(
                 f"Expected at least one '{var_type}' dataset for prediction "
-                f"'{pred_name_str}' without the option 'broadcast_from'"
+                f"'{pred_name_str}' without the option 'broadcast_from'",
             )
 
         # Coordinate features
@@ -2665,7 +2665,7 @@ class MLRModel:
                 raise iris.exceptions.CoordinateNotFoundError(
                     f"Coordinate '{coord_name}' given in 'coords_as_features' "
                     f"not found in '{var_type}' data for prediction "
-                    f"'{pred_name_str}'"
+                    f"'{pred_name_str}'",
                 ) from exc
             units[coord_name] = coord.units
             types[coord_name] = "coordinate"
@@ -2676,7 +2676,7 @@ class MLRModel:
         """Get all group attributes from ``label`` datasets."""
         logger.debug("Extracting group attributes from 'label' datasets")
         grouped_datasets = group_metadata(
-            self._datasets["label"], "group_attribute", sort=True
+            self._datasets["label"], "group_attribute", sort=True,
         )
         group_attributes = list(grouped_datasets.keys())
         if group_attributes == [None]:
@@ -2703,7 +2703,7 @@ class MLRModel:
             units,
         )
         label = pd.DataFrame.from_dict(
-            {labels[0]: units}, orient="index", columns=["units"]
+            {labels[0]: units}, orient="index", columns=["units"],
         )
         return label
 
@@ -2711,7 +2711,7 @@ class MLRModel:
         """Get most important feature given by LIME."""
         logger.info(
             "Calculating local feature importance using LIME (this may take "
-            "a while...)"
+            "a while...)",
         )
         x_pred = self._impute_nans(x_pred)
 
@@ -2736,7 +2736,7 @@ class MLRModel:
                     module="sklearn",
                 )
                 explanation = explainer.explain_instance(
-                    x_single_pred, predict_fn
+                    x_single_pred, predict_fn,
                 )
             local_exp = explanation.local_exp[1]
             sorted_exp = sorted(local_exp, key=lambda elem: elem[0])
@@ -2753,14 +2753,14 @@ class MLRModel:
                     predict_fn=self._clf.predict,
                 )
                 for x in x_pred.values
-            ]
+            ],
         )
         lime_feature_importance = np.array(
-            lime_feature_importance, dtype=self._cfg["dtype"]
+            lime_feature_importance, dtype=self._cfg["dtype"],
         )
         lime_feature_importance = np.moveaxis(lime_feature_importance, -1, 0)
         lime_feature_importance = dict(
-            zip(self.features, lime_feature_importance)
+            zip(self.features, lime_feature_importance),
         )
         return lime_feature_importance
 
@@ -2770,7 +2770,7 @@ class MLRModel:
             raise ValueError(
                 "Cannot create 'LeaveOneGroupOut' CV splitter, "
                 "'group_datasets_by_attributes' was not given during "
-                "class initialization"
+                "class initialization",
             )
         kwargs = {
             "cv": LeaveOneGroupOut(),
@@ -2848,7 +2848,7 @@ class MLRModel:
         if get_mlr_model_error:
             pred_dict["squared_mlr_model_error_estim"] = (
                 self._estimate_mlr_model_error(
-                    len(x_pred.index), get_mlr_model_error
+                    len(x_pred.index), get_mlr_model_error,
                 )
             )
 
@@ -2864,7 +2864,7 @@ class MLRModel:
                 raise ValueError(
                     f"'save_propagated_errors' is not possible because no "
                     f"'prediction_input_error' data for prediction "
-                    f"'{self._get_name(pred_name)}' is available"
+                    f"'{self._get_name(pred_name)}' is available",
                 )
             pred_dict["squared_propagated_input_error"] = (
                 self._propagate_input_errors(x_pred, x_err)
@@ -2881,7 +2881,7 @@ class MLRModel:
         for pred_type in pred_dict:
             if pred_type is not None:
                 logger.debug(
-                    "Found additional prediction type '%s'", pred_type
+                    "Found additional prediction type '%s'", pred_type,
                 )
         logger.info(
             "Successfully created prediction array(s) with %i point(s)",
@@ -2936,7 +2936,7 @@ class MLRModel:
                 return ref_cube
         raise ValueError(
             f"No {var_type} data{msg} without the option "
-            f"'broadcast_from' found"
+            f"'broadcast_from' found",
         )
 
     def _get_sample_weights(self, data_type):
@@ -2973,7 +2973,7 @@ class MLRModel:
             )
             if param in all_params:
                 parameters[param] = log_levels.get(
-                    self._cfg["log_level"], log_levels["default"]
+                    self._cfg["log_level"], log_levels["default"],
                 )
                 if boolean:
                     parameters[param] = bool(parameters[param])
@@ -2995,7 +2995,7 @@ class MLRModel:
             dtype=self._cfg["dtype"],
         )
         sample_weights = self._calculate_sample_weights(
-            ref_cube, var_type, group_attr=group_attr
+            ref_cube, var_type, group_attr=group_attr,
         )
 
         # Iterate over all features
@@ -3023,7 +3023,7 @@ class MLRModel:
                     # Broadcast if necessary
                     if "broadcast_from" in dataset:
                         cube = self._get_broadcasted_cube(
-                            dataset, ref_cube, text
+                            dataset, ref_cube, text,
                         )
                     else:
                         cube = self._load_cube(dataset)
@@ -3037,14 +3037,14 @@ class MLRModel:
                         raise ValueError(
                             f"Specifying prediction input error for "
                             f"categorical feature '{tag}'{msg} is not "
-                            f"possible"
+                            f"possible",
                         )
                     new_data = self._get_cube_data(cube)
 
             # Load coordinate feature data
             else:
                 new_data = self._get_coordinate_data(
-                    ref_cube, var_type, tag, msg
+                    ref_cube, var_type, tag, msg,
                 )
 
             # Save data
@@ -3071,7 +3071,7 @@ class MLRModel:
                 logger.warning(
                     "Automatically set 'group_datasets_by_'"
                     "attributes' to ['dataset'] because 'accept_"
-                    "only_scalar_data' is given"
+                    "only_scalar_data' is given",
                 )
             else:
                 for dataset in datasets:
@@ -3095,19 +3095,18 @@ class MLRModel:
             if "x" in data_frame.columns:
                 if support is not None:
                     data_frame.x.values[:, support] = transform(
-                        data_frame.x.iloc[:, support]
+                        data_frame.x.iloc[:, support],
                     )
                     data_frame = data_frame.fillna(data_frame.mean())
                 else:
                     data_frame.x.values[:] = transform(data_frame.x)
+            elif support is not None:
+                data_frame.values[:, support] = transform(
+                    data_frame.iloc[:, support],
+                )
+                data_frame = data_frame.fillna(data_frame.mean())
             else:
-                if support is not None:
-                    data_frame.values[:, support] = transform(
-                        data_frame.iloc[:, support]
-                    )
-                    data_frame = data_frame.fillna(data_frame.mean())
-                else:
-                    data_frame.values[:] = transform(data_frame)
+                data_frame.values[:] = transform(data_frame)
         return data_frame
 
     def _is_ready_for_plotting(self):
@@ -3131,17 +3130,17 @@ class MLRModel:
             raise TypeError(
                 f"Data type of cube loaded from '{dataset['filename']}' is "
                 f"'{cube.dtype}', at the moment only numeric data is "
-                f"supported"
+                f"supported",
             )
 
         # Convert dtypes
         cube.data = cube.core_data().astype(
-            self._cfg["dtype"], casting="same_kind"
+            self._cfg["dtype"], casting="same_kind",
         )
         for coord in cube.coords():
             try:
                 coord.points = coord.points.astype(
-                    self._cfg["dtype"], casting="same_kind"
+                    self._cfg["dtype"], casting="same_kind",
                 )
             except TypeError:
                 logger.debug(
@@ -3160,7 +3159,7 @@ class MLRModel:
                 f"Units of cube '{dataset['filename']}' for "
                 f"{dataset['var_type']} '{dataset['tag']}' differ from units "
                 f"given in dataset list, got '{cube.units}' in cube and "
-                f"'{dataset['units']}' in dataset list"
+                f"'{dataset['units']}' in dataset list",
             )
         return cube
 
@@ -3181,7 +3180,7 @@ class MLRModel:
         if len(y_all.index) < 2:
             raise ValueError(
                 f"Need at least 2 data points for MLR training, got only "
-                f"{len(y_all.index)}"
+                f"{len(y_all.index)}",
             )
         logger.info("Loaded %i input data point(s)", len(y_all.index))
 
@@ -3199,7 +3198,7 @@ class MLRModel:
                 if len(self.data[data_type].index) < 2:
                     raise ValueError(
                         f"Need at least 2 datasets for '{data_type}' data, "
-                        f"got {len(self.data[data_type].index)}"
+                        f"got {len(self.data[data_type].index)}",
                     )
             logger.info(
                 "Using %i%% of the input data as test data (%i point(s))",
@@ -3236,7 +3235,7 @@ class MLRModel:
 
         # Catch invalid var_types
         if not mlr.datasets_have_mlr_attributes(
-            input_datasets, log_level="error", mode="only_var_type"
+            input_datasets, log_level="error", mode="only_var_type",
         ):
             raise ValueError("Data with invalid 'var_type' given")
 
@@ -3246,13 +3245,13 @@ class MLRModel:
 
         # Prediction datasets
         pred_in_datasets = select_metadata(
-            input_datasets, var_type="prediction_input"
+            input_datasets, var_type="prediction_input",
         )
         pred_in_err_datasets = select_metadata(
-            input_datasets, var_type="prediction_input_error"
+            input_datasets, var_type="prediction_input_error",
         )
         pred_ref_datasets = select_metadata(
-            input_datasets, var_type="prediction_reference"
+            input_datasets, var_type="prediction_reference",
         )
 
         # Check datasets
@@ -3268,7 +3267,7 @@ class MLRModel:
         }
         for label, datasets in datasets_to_check.items():
             if not mlr.datasets_have_mlr_attributes(
-                datasets, log_level="error"
+                datasets, log_level="error",
             ):
                 raise ValueError(msg.format(label))
 
@@ -3311,7 +3310,7 @@ class MLRModel:
         self._datasets["feature"] = self._group_by_attributes(feature_datasets)
         self._datasets["label"] = self._group_by_attributes(label_datasets)
         self._datasets["prediction_input"] = self._group_prediction_datasets(
-            pred_in_datasets
+            pred_in_datasets,
         )
         self._datasets["prediction_input_error"] = (
             self._group_prediction_datasets(pred_in_err_datasets)
@@ -3325,9 +3324,9 @@ class MLRModel:
         x_train = self.get_x_array("train", impute_nans=True)
         y_train = self.get_y_array("train", impute_nans=True)
         verbosity = self._get_verbosity_parameters(
-            LimeTabularExplainer, boolean=True
+            LimeTabularExplainer, boolean=True,
         )
-        verbosity = {param: False for param in verbosity}
+        verbosity = dict.fromkeys(verbosity, False)
         categorical_features_idx = [
             int(np.where(self.features == tag)[0][0])
             for tag in self.categorical_features
@@ -3344,7 +3343,7 @@ class MLRModel:
             **verbosity,
         )
         logger.debug(
-            "Loaded %s with new training data", str(LimeTabularExplainer)
+            "Loaded %s with new training data", str(LimeTabularExplainer),
         )
 
     def _mask_prediction_array(self, y_pred, ref_cube):
@@ -3359,7 +3358,7 @@ class MLRModel:
         return np.ma.masked_invalid(new_y_pred)
 
     def _plot_feature_importance(
-        self, feature_importance_dict, colors, plot_path
+        self, feature_importance_dict, colors, plot_path,
     ):
         """Plot feature importance."""
         logger.info("Plotting feature importance")
@@ -3393,7 +3392,7 @@ class MLRModel:
         for idx, importance in enumerate(feature_importances[sorted_idx]):
             feature = features[sorted_idx][idx]
             axes.barh(
-                pos[idx], importance, align="center", color=colors[feature]
+                pos[idx], importance, align="center", color=colors[feature],
             )
 
         # Plot appearance
@@ -3447,7 +3446,7 @@ class MLRModel:
             if pred.ndim == 2 and pred.shape[1] == 1:
                 logger.warning(
                     "Prediction output is 2D and length of second axis is 1, "
-                    "squeezing second axis"
+                    "squeezing second axis",
                 )
                 pred = np.squeeze(pred, axis=1)
             pred_dict[idx_to_name.get(idx, idx)] = pred
@@ -3481,7 +3480,7 @@ class MLRModel:
             var_name += f"_{pred_type:d}"
             long_name += f" {pred_type:d}"
             logger.warning(
-                "Got unknown prediction type with index %i", pred_type
+                "Got unknown prediction type with index %i", pred_type,
             )
             attributes["var_type"] = "prediction_output_misc"
         elif pred_type in error_types:
@@ -3537,7 +3536,7 @@ class MLRModel:
         for metric in regression_metrics:
             metric_function = getattr(metrics, metric)
             value = metric_function(
-                y_true, y_pred, sample_weight=sample_weights
+                y_true, y_pred, sample_weight=sample_weights,
             )
             if "squared" in metric:
                 value = np.sqrt(value)
@@ -3548,13 +3547,13 @@ class MLRModel:
         """Propagate errors from prediction input."""
         logger.info(
             "Propagating prediction input errors using LIME (this may take a "
-            "while...)"
+            "while...)",
         )
         if "feature_selection" in self._clf.named_steps:
             logger.warning(
                 "Propagating input errors might not work correctly when a "
                 "'feature_selection' step is present (usually because of "
-                "calling rfecv())"
+                "calling rfecv())",
             )
         x_pred = self._impute_nans(x_pred)
 
@@ -3608,7 +3607,7 @@ class MLRModel:
                     categorical_features=self.categorical_features,
                 )
                 for (x, x_e) in zip(x_pred.values, x_err.values)
-            ]
+            ],
         )
         return np.array(errors, dtype=self._cfg["dtype"])
 
@@ -3666,13 +3665,13 @@ class MLRModel:
                                 var_name=f"idx_{dim_idx}",
                             ),
                             dim_idx,
-                        )
+                        ),
                     )
                 pred_cube = iris.cube.Cube(
-                    y_pred, dim_coords_and_dims=dim_coords
+                    y_pred, dim_coords_and_dims=dim_coords,
                 )
             new_path = self._set_prediction_cube_attributes(
-                pred_cube, pred_type, pred_name=pred_name
+                pred_cube, pred_type, pred_name=pred_name,
             )
             io.iris_save(pred_cube, new_path)
 
@@ -3735,7 +3734,7 @@ class MLRModel:
         self._cfg.setdefault("output_file_type", "png")
         self._cfg.setdefault("parameters", {})
         self._cfg.setdefault(
-            "plot_dir", os.path.expanduser(os.path.join("~", "plots"))
+            "plot_dir", os.path.expanduser(os.path.join("~", "plots")),
         )
         self._cfg.setdefault("plot_units", {})
         self._cfg.setdefault("random_state", None)
@@ -3751,10 +3750,10 @@ class MLRModel:
         self._cfg.setdefault("sub_dir", "")
         self._cfg.setdefault("test_size", 0.25)
         self._cfg.setdefault(
-            "work_dir", os.path.expanduser(os.path.join("~", "work"))
+            "work_dir", os.path.expanduser(os.path.join("~", "work")),
         )
         logger.info(
-            "Using imputation strategy '%s'", self._cfg["imputation_strategy"]
+            "Using imputation strategy '%s'", self._cfg["imputation_strategy"],
         )
         if self._cfg["fit_kwargs"]:
             logger.info(
@@ -3812,7 +3811,7 @@ class MLRModel:
             else:
                 raise ValueError(
                     f"Got invalid pipeline step '{step}' in fit parameter "
-                    f"'{param_name}'"
+                    f"'{param_name}'",
                 )
 
         # Add sample weights if possible
@@ -3885,14 +3884,14 @@ class MLRModel:
             )
             new_units = mlr.units_power(new_units, power)
         logger.debug(
-            "Converting units%s from '%s' to '%s'", msg, cube.units, new_units
+            "Converting units%s from '%s' to '%s'", msg, cube.units, new_units,
         )
         try:
             cube.convert_units(new_units)
         except ValueError as exc:
             raise ValueError(
                 f"Cannot convert units{msg} from '{cube.units}' to "
-                f"'{new_units}'"
+                f"'{new_units}'",
             ) from exc
 
     @staticmethod
@@ -3909,7 +3908,7 @@ class MLRModel:
                 raise ValueError(
                     f"Cannot convert units of {dataset['var_type']} "
                     f"'{dataset['tag']}' from '{units_from}' to "
-                    f"'{units_to}'"
+                    f"'{units_to}'",
                 ) from exc
             dataset["units"] = dataset["convert_units_to"]
 
@@ -3921,7 +3920,7 @@ class MLRModel:
             auto_bins = np.histogram_bin_edges(array)
             if len(auto_bins) < 2:
                 raise ValueError(
-                    f"Expected at least 2 bins, got {len(auto_bins):d}"
+                    f"Expected at least 2 bins, got {len(auto_bins):d}",
                 )
             delta = auto_bins[1] - auto_bins[0]
             n_bins = 2.0 * diff / delta
@@ -3946,7 +3945,7 @@ class MLRModel:
         except iris.exceptions.CoordinateNotFoundError as exc:
             raise iris.exceptions.CoordinateNotFoundError(
                 f"Coordinate '{tag}' given in 'coords_as_features' not found "
-                f"in reference cube for '{var_type}'{msg}"
+                f"in reference cube for '{var_type}'{msg}",
             ) from exc
         coord_array = np.ma.filled(coord.points, np.nan)
         coord_dims = ref_cube.coord_dims(coord)
@@ -3959,7 +3958,7 @@ class MLRModel:
             coord_array = np.broadcast_to(coord_array, ref_cube.shape)
         else:
             coord_array = iris.util.broadcast_to_shape(
-                coord_array, ref_cube.shape, coord_dims
+                coord_array, ref_cube.shape, coord_dims,
             )
         logger.debug("Added %s coordinate '%s'%s", var_type, tag, msg)
         return coord_array.ravel()
@@ -4007,7 +4006,7 @@ class MLRModel:
         if data_type not in allowed_data_types:
             raise NotImplementedError(
                 f"Plot kwargs for data type '{data_type}' not implemented "
-                f"yet, only {allowed_data_types} are supported yet"
+                f"yet, only {allowed_data_types} are supported yet",
             )
         kwargs = deepcopy(plot_kwargs[data_type])
         if plot_type == "scatter":
@@ -4045,7 +4044,7 @@ class MLRModel:
         diff = mask.sum()
         if diff:
             logger.info(
-                "Removed %i training point(s) where labels were missing", diff
+                "Removed %i training point(s) where labels were missing", diff,
             )
         return (x_data, y_data, sample_weights)
 

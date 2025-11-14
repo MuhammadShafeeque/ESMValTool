@@ -13,8 +13,7 @@ Changes to the original tokenize.py for Python 3:
 import os
 import sys
 
-_FILENAME = '{}{}.py_'.format(
-    os.path.splitext(__file__)[0], sys.version_info.major)
+_FILENAME = f"{os.path.splitext(__file__)[0]}{sys.version_info.major}.py_"
 
 with open(_FILENAME) as src:
-    exec(compile(src.read(), _FILENAME, mode='exec'))
+    exec(compile(src.read(), _FILENAME, mode="exec"))

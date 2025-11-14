@@ -58,13 +58,13 @@ def _cube_to_save_ploted(var, lats, lons, names):
     )
     new_cube.add_dim_coord(
         iris.coords.DimCoord(
-            lats, var_name="lat", long_name="latitude", units="degrees_north"
+            lats, var_name="lat", long_name="latitude", units="degrees_north",
         ),
         0,
     )
     new_cube.add_dim_coord(
         iris.coords.DimCoord(
-            lons, var_name="lon", long_name="longitude", units="degrees_east"
+            lons, var_name="lon", long_name="longitude", units="degrees_east",
         ),
         1,
     )
@@ -73,7 +73,7 @@ def _cube_to_save_ploted(var, lats, lons, names):
 
 
 def _get_provenance_record(
-    ancestor_files, caption, statistics, domains, plot_type="geo"
+    ancestor_files, caption, statistics, domains, plot_type="geo",
 ):
     """Get Provenance record."""
     record = {
@@ -100,7 +100,7 @@ def _press_interp_cube(cube, pstart=60000, pend=2500, pgrid=221):
     # interpolate to dense grid, use equal dist points in log(p)
     logpr = np.log(np.array([pstart, pend]))
     sample_points = [
-        ("air_pressure", np.exp(np.linspace(logpr[0], logpr[1], pgrid)))
+        ("air_pressure", np.exp(np.linspace(logpr[0], logpr[1], pgrid))),
     ]
     new_cube = cube.interpolate(sample_points, iris.analysis.Linear())
 
@@ -114,7 +114,7 @@ def _set_new_dims(new_tacube, new_svarcube):
     untouched_dims = set(range(new_svarcube.ndim)) - set(dims_to_collapse)
     dims = list(untouched_dims) + list(dims_to_collapse)
     unrolled_data = np.moveaxis(
-        new_tacube.data, dims, range(new_svarcube.ndim)
+        new_tacube.data, dims, range(new_svarcube.ndim),
     )
     return unrolled_data
 
@@ -129,13 +129,13 @@ def cube_to_save_ploted_map(var, lats, lons, names):
     )
     new_cube.add_dim_coord(
         iris.coords.DimCoord(
-            lats, var_name="lat", long_name="latitude", units="degrees_north"
+            lats, var_name="lat", long_name="latitude", units="degrees_north",
         ),
         0,
     )
     new_cube.add_dim_coord(
         iris.coords.DimCoord(
-            lons, var_name="lon", long_name="longitude", units="degrees_east"
+            lons, var_name="lon", long_name="longitude", units="degrees_east",
         ),
         1,
     )
@@ -164,7 +164,7 @@ def plot_tp_map(cfg, mean_cube, titlestr, variable, listdata):
     axx.set_extent([-180, 180, -90, 90], cart.PlateCarree())
 
     data_c, lon_c = add_cyclic_point(
-        mean_cube.data, coord=mean_cube.coord("longitude").points
+        mean_cube.data, coord=mean_cube.coord("longitude").points,
     )
 
     if variable == "Air Temperature":
@@ -182,7 +182,7 @@ def plot_tp_map(cfg, mean_cube, titlestr, variable, listdata):
     else:
         print_var = mean_cube.long_name
         set_range = np.linspace(
-            np.nanmin(mean_cube.data), np.nanmax(mean_cube.data), 21
+            np.nanmin(mean_cube.data), np.nanmax(mean_cube.data), 21,
         )
     # draw filled contours
     cnplot = plt.contourf(
@@ -218,7 +218,7 @@ def plot_tp_map(cfg, mean_cube, titlestr, variable, listdata):
     plt.close()
 
     logger.info(
-        "Saving analysis results to %s", get_diagnostic_filename(figname, cfg)
+        "Saving analysis results to %s", get_diagnostic_filename(figname, cfg),
     )
 
     iris.save(
@@ -240,21 +240,21 @@ def plot_tp_map(cfg, mean_cube, titlestr, variable, listdata):
         get_diagnostic_filename(figname, cfg),
         pformat(
             _get_provenance_record(
-                listdata, titlestr + variable, ["other"], ["global"]
-            )
+                listdata, titlestr + variable, ["other"], ["global"],
+            ),
         ),
     )
     with ProvenanceLogger(cfg) as provenance_logger:
         provenance_logger.log(
             get_diagnostic_filename(figname, cfg),
             _get_provenance_record(
-                listdata, titlestr + variable, ["other"], ["global"]
+                listdata, titlestr + variable, ["other"], ["global"],
             ),
         )
         provenance_logger.log(
             get_plot_filename(figname, cfg),
             _get_provenance_record(
-                listdata, titlestr + variable, ["other"], ["global"]
+                listdata, titlestr + variable, ["other"], ["global"],
             ),
         )
 
@@ -262,7 +262,7 @@ def plot_tp_map(cfg, mean_cube, titlestr, variable, listdata):
 def main(cfg):
     """Read in data for tropopause calculation."""
     available_vars = list(
-        group_metadata(cfg["input_data"].values(), "short_name")
+        group_metadata(cfg["input_data"].values(), "short_name"),
     )
 
     logging.debug("Found variables in recipe:\n%s", available_vars)
@@ -274,7 +274,7 @@ def main(cfg):
     data = {}
     for varname in available_vars:
         data[varname] = select_metadata(
-            cfg["input_data"].values(), short_name=varname
+            cfg["input_data"].values(), short_name=varname,
         )
         data[varname] = sorted_metadata(data[varname], sort="dataset")
 
@@ -285,7 +285,7 @@ def main(cfg):
         new_tacube = _press_interp_cube(iris.load_cube(attributes["filename"]))
         for svar in available_vars_min_tas:
             input_file_svar = attributes["filename"].replace(
-                "/ta/", "/" + svar + "/"
+                "/ta/", "/" + svar + "/",
             )
             input_file_svar = input_file_svar.replace("_ta_", "_" + svar + "_")
 
@@ -297,7 +297,7 @@ def main(cfg):
             unrolled_data = _set_new_dims(new_tacube, new_svarcube)
 
             trop_svar = new_svarcube.collapsed(
-                "air_pressure", min_pos, data_min=unrolled_data
+                "air_pressure", min_pos, data_min=unrolled_data,
             )
             plot_tp_map(
                 cfg,
@@ -308,7 +308,7 @@ def main(cfg):
             )
 
         trop_ta = new_tacube.collapsed(
-            "air_pressure", min_pos, data_min=unrolled_data
+            "air_pressure", min_pos, data_min=unrolled_data,
         )
 
         plot_tp_map(

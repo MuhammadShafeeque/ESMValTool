@@ -83,10 +83,10 @@ def _get_plot_func(cfg):
         raise AttributeError(
             f"Invalid psyplot_func '{cfg['psyplot_func']}' (must be a "
             f"function of the module psyplot.project.plot). Currently "
-            f"supported:\n{all_plot_funcs}"
+            f"supported:\n{all_plot_funcs}",
         )
     logger.info(
-        "Using plotting function psyplot.project.plot.%s", cfg["psyplot_func"]
+        "Using plotting function psyplot.project.plot.%s", cfg["psyplot_func"],
     )
     return getattr(psy.plot, cfg["psyplot_func"])
 
@@ -101,7 +101,7 @@ def _get_psyplot_kwargs(cfg, dataset):
             except KeyError as exc:
                 raise ValueError(
                     f"Not all necessary facets psyplot_kwargs '{key}: {val}' "
-                    f"available for dataset\n{pformat(dataset)}"
+                    f"available for dataset\n{pformat(dataset)}",
                 ) from exc
             psyplot_kwargs[key] = val
     return psyplot_kwargs

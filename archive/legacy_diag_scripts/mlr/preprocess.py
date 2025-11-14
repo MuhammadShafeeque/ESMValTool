@@ -158,7 +158,7 @@ def _add_categorized_time_coords(cube, coords, aggregator):
             continue
         if hasattr(iris.coord_categorisation, f"add_{coord_name}"):
             getattr(iris.coord_categorisation, f"add_{coord_name}")(
-                cube, "time"
+                cube, "time",
             )
             logger.debug("Added coordinate '%s' to cube", coord_name)
         else:
@@ -166,7 +166,7 @@ def _add_categorized_time_coords(cube, coords, aggregator):
                 f"Cannot aggregate over coordinate(s) '{coords}' using "
                 f"'{aggregator}': Categorized coordinate '{coord_name}' is "
                 f"not a coordinate of cube {cube.summary(shorten=True)} and "
-                f"cannot be added via iris.coord_categorisation"
+                f"cannot be added via iris.coord_categorisation",
             )
 
 
@@ -180,7 +180,7 @@ def _apply_trend_aggregator(cfg, cube, data, coord_name):
     if len(coord_dims) != 1:
         raise ValueError(
             f"Trend aggregation along coordinate '{coord_name}' requires 1D "
-            f"coordinate, got {len(coord_dims):d}D coordinate"
+            f"coordinate, got {len(coord_dims):d}D coordinate",
         )
     dim_coord = cube.coord(dim_coords=True, dimensions=coord_dims[0])
 
@@ -194,10 +194,10 @@ def _apply_trend_aggregator(cfg, cube, data, coord_name):
     all_cubes = parallel(
         [
             delayed(_calculate_slope_along_coord)(
-                cube_slice, dim_coord.name(), return_stderr=return_stderr
+                cube_slice, dim_coord.name(), return_stderr=return_stderr,
             )
             for cube_slice in cube_slices
-        ]
+        ],
     )
 
     # Merge output (Original units might get lost in pool)
@@ -206,7 +206,7 @@ def _apply_trend_aggregator(cfg, cube, data, coord_name):
     cube.units = units
     if return_stderr:
         cube_stderr = iris.cube.CubeList(
-            [tup[1] for tup in all_cubes]
+            [tup[1] for tup in all_cubes],
         ).merge_cube()
         cube_stderr.units = units
     else:
@@ -224,19 +224,19 @@ def _calculate_slope_along_coord(cube, coord_name, return_stderr=True):
     if len(coord_dims) != 1:
         raise ValueError(
             f"Trend calculation along coordinate '{coord_name}' requires "
-            f"1D coordinate, got {len(coord_dims):d}D coordinate"
+            f"1D coordinate, got {len(coord_dims):d}D coordinate",
         )
 
     # Get slope and error if desired
     x_data = coord.points
     y_data = np.moveaxis(cube.data, coord_dims[0], -1)
     calc_slope = np.vectorize(
-        _get_slope, excluded=["x_arr"], signature="(n),(n)->()"
+        _get_slope, excluded=["x_arr"], signature="(n),(n)->()",
     )
     slope = calc_slope(x_data, y_data)
     if return_stderr:
         calc_slope_stderr = np.vectorize(
-            _get_slope_stderr, excluded=["x_arr"], signature="(n),(n)->()"
+            _get_slope_stderr, excluded=["x_arr"], signature="(n),(n)->()",
         )
         slope_stderr = calc_slope_stderr(x_data, y_data)
     else:
@@ -266,7 +266,7 @@ def _check_cubes(cube, ref_cube, ref_option):
     if cube.shape != ref_cube.shape:
         raise ValueError(
             f"Expected identical shapes for data and reference data, got "
-            f"{cube.shape} and {ref_cube.shape}"
+            f"{cube.shape} and {ref_cube.shape}",
         )
     if ref_option == "subtract" and cube.units != ref_cube.units:
         logger.warning(
@@ -291,7 +291,7 @@ def _collapse_over(cfg, cube, data, coords, aggregator):
     if horizontal_coords:
         horizontal_weights = _get_horizontal_weights(cfg, cube)
         cube = cube.collapsed(
-            horizontal_coords, iris_op, weights=horizontal_weights
+            horizontal_coords, iris_op, weights=horizontal_weights,
         )
         for coord in horizontal_coords:
             coords.remove(coord)
@@ -317,7 +317,7 @@ def _collapse_over(cfg, cube, data, coords, aggregator):
 
 
 def _coord_constraint(
-    cell, value, coord_name, ignore_bounds=False, interpret_as_range=False
+    cell, value, coord_name, ignore_bounds=False, interpret_as_range=False,
 ):
     """Callable that can be used to form a :class:`iris.Constraint`."""
     if coord_name == "time" or ignore_bounds:
@@ -336,7 +336,7 @@ def _fail_if_stderr(data, description):
     """Raise exception of data is a standard error."""
     if "stderr" in data:
         raise ValueError(
-            f"{description} is not supported with standard errors yet"
+            f"{description} is not supported with standard errors yet",
         )
 
 
@@ -436,7 +436,7 @@ def _get_ref_calc(cfg, dataset, ref_datasets, ref_option):
             collapse_over=ref_kwargs.get("collapse_over"),
         )
         (cube, dataset) = _set_trend_metadata(
-            cfg, cube, cube_stderr, dataset, ref_cube.units
+            cfg, cube, cube_stderr, dataset, ref_cube.units,
         )
         suffix = "relative to ref"
     else:
@@ -461,7 +461,7 @@ def _get_ref_calc(cfg, dataset, ref_datasets, ref_option):
 
 
 def _get_ref_calc_stderr(
-    cfg, dataset, ref_datasets, regular_datasets, ref_option
+    cfg, dataset, ref_datasets, regular_datasets, ref_option,
 ):
     """Perform calculations involving reference datasets for error data."""
     ref_kwargs = cfg.get("ref_kwargs", {})
@@ -489,7 +489,7 @@ def _get_ref_calc_stderr(
     if len(reg_dataset) != 1:
         raise ValueError(
             f"Expected exactly one regular dataset for error dataset "
-            f"{dataset}, got {len(reg_dataset):d}"
+            f"{dataset}, got {len(reg_dataset):d}",
         )
     reg_dataset = reg_dataset[0]
 
@@ -504,7 +504,7 @@ def _get_ref_calc_stderr(
     if ref_option == "divide":
         error = np.ma.abs(reg_cube.data) * np.ma.sqrt(
             (cube.data / reg_dataset["original_cube"].data) ** 2
-            + (ref_cube.data / reg_dataset["ref_cube"].data) ** 2
+            + (ref_cube.data / reg_dataset["ref_cube"].data) ** 2,
         )
         cube.data = error
     elif ref_option == "subtract":
@@ -513,12 +513,12 @@ def _get_ref_calc_stderr(
         raise ValueError(
             "Calculations involving reference datasets with option 'trend' "
             "is not supported for error datasets yet; errors are calculated "
-            "from the original dataset using the standard error of slopes"
+            "from the original dataset using the standard error of slopes",
         )
     else:
         raise NotImplementedError(
             f"Calculations involving reference datasets with option "
-            f"'{ref_option}' are not supported yet"
+            f"'{ref_option}' are not supported yet",
         )
     cube.units = reg_cube.units
     dataset["standard_name"] = reg_dataset["standard_name"]
@@ -540,14 +540,14 @@ def _get_ref_dataset(dataset, ref_datasets, **ref_kwargs):
             f"Expected exactly one reference dataset (with attribute ref "
             f"== True) for dataset {dataset}, got {len(ref_dataset):d}. "
             f"Consider extending list of metadata for option 'matched_by' in "
-            f"'ref_kwargs' (used {kwargs})"
+            f"'ref_kwargs' (used {kwargs})",
         )
     ref_dataset = ref_dataset[0]
     return ref_dataset
 
 
 def _get_single_constraint(
-    cube, coord_name, val, ignore_bounds=False, interpret_as_range=False
+    cube, coord_name, val, ignore_bounds=False, interpret_as_range=False,
 ):
     """Get single :class:`iris.Constraint`."""
     if coord_name == "time":
@@ -559,15 +559,15 @@ def _get_single_constraint(
         except TypeError as exc:
             raise TypeError(
                 f"Expected iterable for values of 'extract_range' for "
-                f"coordinate '{coord_name}', got '{val}'"
+                f"coordinate '{coord_name}', got '{val}'",
             ) from exc
         if len_range != 2:
             raise ValueError(
                 f"Expected exactly two elements for range of '{coord_name}' "
-                f"in 'extract_range', got {len_range:d} ({val})"
+                f"in 'extract_range', got {len_range:d} ({val})",
             )
         logger.debug(
-            "Extracting range %s for coordinate '%s'", val, coord_name
+            "Extracting range %s for coordinate '%s'", val, coord_name,
         )
     coord_vals = functools.partial(
         _coord_constraint,
@@ -622,14 +622,14 @@ def _get_trend_relative_to_ref(cfg, data, ref_cube, collapse_over=None):
         raise ValueError(
             f"Trend calculation involving reference dataset along coordinate "
             f"'{collapse_over}' requires 1D coordinate, got "
-            f"{len(coord_dims):d}D coordinate"
+            f"{len(coord_dims):d}D coordinate",
         )
     if ref_cube.coord_dims(collapse_over) != coord_dims:
         raise ValueError(
             f"Trend calculation involving reference dataset along coordinate "
             f"'{collapse_over}' requires that the coordinate covers identical "
             f"dimensions for the dataset and reference dataset, got "
-            f"{coord_dims} and {ref_cube.coord_dims(collapse_over)}"
+            f"{coord_dims} and {ref_cube.coord_dims(collapse_over)}",
         )
 
     # Get slope and error if desired
@@ -639,7 +639,7 @@ def _get_trend_relative_to_ref(cfg, data, ref_cube, collapse_over=None):
     slope = calc_slope(x_data, y_data)
     if return_stderr:
         calc_slope_stderr = np.vectorize(
-            _get_slope_stderr, signature="(n),(n)->()"
+            _get_slope_stderr, signature="(n),(n)->()",
         )
         slope_stderr = calc_slope_stderr(x_data, y_data)
     else:
@@ -694,7 +694,7 @@ def _promote_aux_coord(cube, data, coord_name):
             if isinstance(data.get("stderr"), dict):
                 stderr_cube = data["stderr"]["cube"]
                 iris.util.promote_aux_coord_to_dim_coord(
-                    stderr_cube, coord_name
+                    stderr_cube, coord_name,
                 )
 
 
@@ -738,7 +738,7 @@ def aggregate_by(cfg, cube, data):
         if aggregator not in AGGREGATORS:
             raise ValueError(
                 f"Expected one of {list(AGGREGATORS.keys())} as aggregator "
-                f"for 'aggregate_by', got '{aggregator}'"
+                f"for 'aggregate_by', got '{aggregator}'",
             )
         iris_op = AGGREGATORS[aggregator]
         logger.debug(
@@ -761,12 +761,12 @@ def aggregate_by_trend(cfg, cube, data):
     if not isinstance(coords, list):
         coords = [coords]
     logger.debug(
-        "Aggregating over coordinate(s) %s by calculating 'trend'", coords
+        "Aggregating over coordinate(s) %s by calculating 'trend'", coords,
     )
     if len(coords) != 1:
         raise ValueError(
             f"Aggregation using 'trend' is currently only supported with a "
-            f"single coordinate, got {coords}"
+            f"single coordinate, got {coords}",
         )
     _add_categorized_time_coords(cube, coords, "trend")
     coord_name = coords[0]
@@ -784,14 +784,14 @@ def apply_common_mask(cfg, input_data):
     if len(shapes) > 1:
         raise ValueError(
             f"Expected cubes with identical shapes when 'apply_common_mask' "
-            f"is set to 'True', got shapes {shapes}"
+            f"is set to 'True', got shapes {shapes}",
         )
     common_mask = da.full(list(shapes)[0], False)
     for data in input_data:
         common_mask |= da.ma.getmaskarray(data["cube"].core_data())
     for data in input_data:
         data["cube"].data = da.ma.masked_array(
-            data["cube"].core_data(), mask=common_mask
+            data["cube"].core_data(), mask=common_mask,
         )
     return input_data
 
@@ -805,10 +805,10 @@ def argsort(cfg, cube, data):
     if not coord:
         raise ValueError(
             "When 'argsort' is given, a valid 'coord' needs to specified as "
-            "key"
+            "key",
         )
     logger.debug(
-        "Calculating argsort along coordinate '%s' to get ranking", coord
+        "Calculating argsort along coordinate '%s' to get ranking", coord,
     )
     axis = cube.coord_dims(coord)[0]
     original_mask = np.ma.getmaskarray(cube.data)
@@ -855,10 +855,10 @@ def collapse(cfg, cube, data):
         if aggregator not in AGGREGATORS:
             raise ValueError(
                 f"Expected one of {list(AGGREGATORS.keys())} as aggregator "
-                f"for 'collapse', got '{aggregator}'"
+                f"for 'collapse', got '{aggregator}'",
             )
         logger.debug(
-            "Collapsing coordinate(s) %s by calculating %s", coords, aggregator
+            "Collapsing coordinate(s) %s by calculating %s", coords, aggregator,
         )
         if coords == ["all"]:
             coords = [coord.name() for coord in cube.coords(dim_coords=True)]
@@ -879,18 +879,18 @@ def collapse_with_trend(cfg, cube, data):
     if len(coords) != 1:
         raise ValueError(
             f"Collapsing using 'trend' is currently only supported with a "
-            f"single coordinate, got {coords}"
+            f"single coordinate, got {coords}",
         )
     coord_name = coords[0]
     if not cube.coords(coord_name):
         raise iris.exceptions.CoordinateNotFoundError(
             f"Cannot calculate trend along '{coord_name}', cube "
             f"{cube.summary(shorten=True)} does not contain a coordinate "
-            f"with that name"
+            f"with that name",
         )
     return_stderr = _return_stderr(cfg, data)
     (cube, cube_stderr) = _calculate_slope_along_coord(
-        cube, coord_name, return_stderr=return_stderr
+        cube, coord_name, return_stderr=return_stderr,
     )
     units = _get_coord_units(cube, coord_name)
     (cube, data) = _set_trend_metadata(cfg, cube, cube_stderr, data, units)
@@ -907,14 +907,14 @@ def convert_units_to(cfg, cube, data):
         if data_settings:
             units_to = data_settings
         logger.debug(
-            "Converting units from '%s' to '%s'", cube.units, units_to
+            "Converting units from '%s' to '%s'", cube.units, units_to,
         )
         try:
             cube.convert_units(units_to)
         except ValueError as exc:
             raise ValueError(
                 f"Cannot convert units of cube {cube.summary(shorten=True)} "
-                f"from '{cube.units}' to '{units_to}'"
+                f"from '{cube.units}' to '{units_to}'",
             ) from exc
         data["units"] = str(cube.units)
     return (cube, data)
@@ -939,14 +939,14 @@ def extract(cfg, cube):
     constraints = []
     for coord_name, val in cfg["extract"].items():
         constraint = _get_single_constraint(
-            cube, coord_name, val, ignore_bounds=cfg["extract_ignore_bounds"]
+            cube, coord_name, val, ignore_bounds=cfg["extract_ignore_bounds"],
         )
         constraints.append(constraint)
     new_cube = _get_constrained_cube(cube, constraints)
     if new_cube is None:
         raise ValueError(
             f"Extracting {cfg['extract']} from cube "
-            f"{cube.summary(shorten=True)} yielded empty cube"
+            f"{cube.summary(shorten=True)} yielded empty cube",
         )
     return new_cube
 
@@ -969,7 +969,7 @@ def extract_range(cfg, cube):
     if new_cube is None:
         raise ValueError(
             f"Extracting range {cfg['extract_range']} from cube "
-            f"{cube.summary(shorten=True)} yielded empty cube"
+            f"{cube.summary(shorten=True)} yielded empty cube",
         )
     return new_cube
 
@@ -985,7 +985,7 @@ def get_ref_cube(input_data, **kwargs):
     if len(datasets) != 1:
         raise ValueError(
             f"Expected exactly one reference dataset for unifying coords "
-            f"matching {kwargs}, got {len(datasets):d}"
+            f"matching {kwargs}, got {len(datasets):d}",
         )
     ref_cube = iris.load_cube(datasets[0]["filename"])
     return ref_cube
@@ -1009,7 +1009,7 @@ def mask(cfg, cube):
         if not hasattr(np.ma, masking_op):
             raise AttributeError(
                 f"Invalid masking operation, '{masking_op}' is not a function "
-                f"of module numpy.ma"
+                f"of module numpy.ma",
             )
         logger.debug(
             "Applying mask operation '%s' using arguments %s",
@@ -1079,12 +1079,12 @@ def ref_calculation(cfg, input_data):
     if ref_option not in ref_options:
         raise ValueError(
             f"Expected one of {ref_options} for 'ref_calculation', got "
-            f"'{ref_option}'"
+            f"'{ref_option}'",
         )
     ref_kwargs = cfg.get("ref_kwargs", {})
     metadata = ref_kwargs.get("matched_by", [])
     logger.info(
-        "Performing calculation '%s' involving reference datasets", ref_option
+        "Performing calculation '%s' involving reference datasets", ref_option,
     )
     logger.info(
         "Retrieving reference dataset attributes %s to match datasets",
@@ -1112,7 +1112,7 @@ def ref_calculation(cfg, input_data):
     )
     for dataset in regular_datasets_errors:
         dataset = _get_ref_calc_stderr(
-            cfg, dataset, ref_datasets, new_data, ref_option
+            cfg, dataset, ref_datasets, new_data, ref_option,
         )
         new_data.append(dataset)
     return new_data
@@ -1137,7 +1137,7 @@ def scalar_operations(cfg, cube):
         else:
             raise ValueError(
                 f"Expected one of {allowed_operations} for operation in "
-                f"'scalar_operations', got '{operation}'"
+                f"'scalar_operations', got '{operation}'",
             )
     return cube
 
@@ -1156,7 +1156,7 @@ def unify_coords_to(cube, ref_cube):
         )
         old_cube = cube.copy()
         broadcasted_data = np.broadcast_to(
-            np.ma.array(old_cube.data).filled(np.nan), ref_cube.shape
+            np.ma.array(old_cube.data).filled(np.nan), ref_cube.shape,
         )
         cube = iris.cube.Cube(np.ma.masked_invalid(broadcasted_data))
         cube.metadata = old_cube.metadata
@@ -1178,7 +1178,7 @@ def write_cube(cfg, cube, data):
     if not mlr.datasets_have_mlr_attributes([data], log_level="error"):
         raise ValueError(
             f"Cannot write cube {cube.summary(shorten=True)} using metadata "
-            f"{data}"
+            f"{data}",
         )
 
     # Get new path

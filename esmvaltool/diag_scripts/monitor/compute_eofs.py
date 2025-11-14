@@ -94,7 +94,7 @@ class Eofs(MonitorBase):
                 solver = Eof(cube, weights="coslat")
                 # Get variable options as defined in monitor_config.yml
                 variable_options = self._get_variable_options(
-                    var_info["variable_group"], ""
+                    var_info["variable_group"], "",
                 )
                 # Initialise PlotMap class
                 plot_map = PlotMap(loglevel="INFO")
@@ -126,7 +126,7 @@ class Eofs(MonitorBase):
                     f"(project {var_info[n.PROJECT]})."
                 )
                 self.record_plot_provenance(
-                    filename, var_info, "eof", caption=caption
+                    filename, var_info, "eof", caption=caption,
                 )
 
                 # Compute PC

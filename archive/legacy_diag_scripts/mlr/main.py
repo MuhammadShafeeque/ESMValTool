@@ -175,7 +175,7 @@ def _get_pseudo_reality_data(cfg, input_data):
     # Add aliases and group datasets
     for dataset in training_data:
         dataset["pseudo_reality_group"] = mlr.create_alias(
-            dataset, pseudo_reality_attrs
+            dataset, pseudo_reality_attrs,
         )
     grouped_datasets = group_metadata(training_data, "pseudo_reality_group")
     grouped_input_data = {}
@@ -201,7 +201,7 @@ def _get_pseudo_reality_data(cfg, input_data):
 def _get_raw_input_data(cfg):
     """Extract all input datasets."""
     input_data = mlr.get_input_data(
-        cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore")
+        cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore"),
     )
     select_kwargs = cfg.get("select_metadata", {})
     if select_kwargs:
@@ -217,7 +217,7 @@ def _update_mlr_model(mlr_model_type, mlr_model):
     """Update MLR model parameters during run time."""
     if mlr_model_type == "gpr_sklearn":
         new_kernel = sklearn_kernels.ConstantKernel(
-            1.0, (1e-5, 1e5)
+            1.0, (1e-5, 1e5),
         ) * sklearn_kernels.RBF(1.0, (1e-5, 1e5))
         mlr_model.update_parameters(final__regressor__kernel=new_kernel)
 
@@ -226,12 +226,12 @@ def check_cfg(cfg):
     """Check recipe configuration for invalid options."""
     if "mlr_model_type" not in cfg:
         raise ValueError(
-            "Necessary configuration option 'mlr_model_type' not given"
+            "Necessary configuration option 'mlr_model_type' not given",
         )
     if cfg.get("group_metadata") and cfg.get("pseudo_reality"):
         raise ValueError(
             "The options 'group_metadata' and 'pseudo_reality' may be used "
-            "together"
+            "together",
         )
     mutual_exclusive_options = [
         int("efecv_kwargs" in cfg),
@@ -241,7 +241,7 @@ def check_cfg(cfg):
     if sum(mutual_exclusive_options) > 1:
         raise ValueError(
             "The options 'efecv_kwargs', 'grid_search_cv_param_grid' and "
-            "'rfecv_kwargs' may not be used together"
+            "'rfecv_kwargs' may not be used together",
         )
 
 
@@ -275,8 +275,7 @@ def run_mlr_model(cfg, mlr_model_type, group_attribute, grouped_datasets):
 
         # Fit and predict
         if (
-            "grid_search_cv_param_grid" in cfg
-            and cfg["grid_search_cv_param_grid"]
+            cfg.get("grid_search_cv_param_grid")
         ):
             cv_param_grid = cfg["grid_search_cv_param_grid"]
             cv_kwargs = cfg.get("grid_search_cv_kwargs", {})
@@ -315,7 +314,7 @@ def run_mlr_model_plots(cfg, mlr_model, mlr_model_type):
     mlr_model.plot_prediction_errors()
     mlr_model.plot_scatterplots()
     if not cfg.get("accept_only_scalar_data") and cfg.get(
-        "plot_partial_dependences"
+        "plot_partial_dependences",
     ):
         mlr_model.plot_partial_dependences()
     if "gbr" in mlr_model_type:
@@ -330,7 +329,7 @@ def run_mlr_model_plots(cfg, mlr_model, mlr_model_type):
             "linear" in mlr_model_type,
             "ridge" in mlr_model_type,
             mlr_model_type == "huber",
-        ]
+        ],
     )
     if is_linear_model:
         mlr_model.plot_coefs()

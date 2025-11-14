@@ -53,7 +53,7 @@ class LinearModel(MLRModel):
         axes.set_yticks(pos)
         axes.set_yticklabels(y_tick_labels)
         axes.set_xlim(
-            -np.max(np.abs(axes.get_xlim())), np.max(np.abs(axes.get_xlim()))
+            -np.max(np.abs(axes.get_xlim())), np.max(np.abs(axes.get_xlim())),
         )
         axes.axvline(0.0, color="k")
 
@@ -119,11 +119,11 @@ class LinearModel(MLRModel):
         coefs = self._clf.coef_
         feature_importances = np.abs(coefs) / np.sum(np.abs(coefs))
         feature_importance_dict = dict(
-            zip(self.features_after_preprocessing, feature_importances)
+            zip(self.features_after_preprocessing, feature_importances),
         )
         colors = self._get_colors_for_features(color_coded=color_coded)
 
         # Plot
         self._plot_feature_importance(
-            feature_importance_dict, colors, plot_path
+            feature_importance_dict, colors, plot_path,
         )

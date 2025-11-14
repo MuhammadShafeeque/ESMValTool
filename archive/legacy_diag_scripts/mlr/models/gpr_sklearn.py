@@ -22,7 +22,7 @@ class AdvancedGaussianProcessRegressor(GaussianProcessRegressor):
     def predict(self, x_data, return_var=False, return_cov=False):
         """Expand :meth:`predict` to accept ``return_var``."""
         pred = super().predict(
-            x_data, return_std=return_var, return_cov=return_cov
+            x_data, return_std=return_var, return_cov=return_cov,
         )
         if return_var:
             return (pred[0], pred[1] ** 2)

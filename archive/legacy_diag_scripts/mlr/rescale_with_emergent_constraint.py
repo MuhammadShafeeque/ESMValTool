@@ -89,7 +89,7 @@ def _check_datasets(datasets, name):
         if len(vals) != 1:
             raise ValueError(
                 f"Expected data with unique '{key}' for var_type "
-                f"'{name}', got {vals}"
+                f"'{name}', got {vals}",
             )
 
 
@@ -99,7 +99,7 @@ def _get_data(dataset):
     if cube.data.size != 1:
         raise ValueError(
             f"Expected scalar data for dataset {dataset}, got data with shape "
-            f"{cube.shape}"
+            f"{cube.shape}",
         )
     return cube.data.squeeze()
 
@@ -114,7 +114,7 @@ def _get_data_frame(datasets, group_by_attributes, var_type):
             raise ValueError(
                 f"Got duplicate data for group '{new_group}' of var_type "
                 f"'{var_type}', consider extending list of attributes that "
-                f"is used for grouping (currently: {group_by_attributes})"
+                f"is used for grouping (currently: {group_by_attributes})",
             )
         new_data = _get_data(dataset)
         data_frame.loc[new_group] = new_data
@@ -129,7 +129,7 @@ def _get_datasets_for_ec(input_data):
     labels = select_metadata(input_data, var_type="label")
     pred_input = select_metadata(input_data, var_type="prediction_input")
     pred_input_err = select_metadata(
-        input_data, var_type="prediction_input_error"
+        input_data, var_type="prediction_input_error",
     )
     data_to_check = {
         "feature": features,
@@ -161,11 +161,11 @@ def _get_ec_cube(x_data, y_data):
     """Get :class:`iris.cube.Cube` representing emergent relationship."""
     (feature, feature_units, label, label_units) = _get_tags(x_data, y_data)
     x_cube = ec.pandas_object_to_cube(
-        x_data, var_name=feature, units=feature_units
+        x_data, var_name=feature, units=feature_units,
     )[:, 0]
     x_coord = cube_to_aux_coord(x_cube)
     y_cube = ec.pandas_object_to_cube(
-        y_data, var_name=label, units=label_units
+        y_data, var_name=label, units=label_units,
     )[:, 0]
     y_cube.add_aux_coord(x_coord, 0)
     y_cube.remove_coord("columns")
@@ -190,7 +190,7 @@ def _get_error_dataset(cfg, datasets):
     error_dataset["var_type"] = "prediction_output_error"
     error_dataset["error"] = "due to rescaling using emergent relationship"
     error_dataset["filename"] = get_diagnostic_filename(
-        "standard_error_of_emergent_constraint", cfg
+        "standard_error_of_emergent_constraint", cfg,
     )
     return error_dataset
 
@@ -201,7 +201,7 @@ def _get_group(dataset, group_by_attributes):
     for attr in group_by_attributes:
         if attr not in dataset:
             raise KeyError(
-                f"Attribute '{attr}' not available in dataset {dataset}"
+                f"Attribute '{attr}' not available in dataset {dataset}",
             )
         values.append(dataset[attr])
     return GROUPS_SEP.join(values)
@@ -210,7 +210,7 @@ def _get_group(dataset, group_by_attributes):
 def _get_input_data(cfg):
     """Get input data."""
     input_data = mlr.get_input_data(
-        cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore")
+        cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore"),
     )
     return input_data
 
@@ -237,7 +237,7 @@ def _get_ref_cube(datasets):
     shapes = list({cube.shape for cube in cubes})
     if len(shapes) != 1:
         raise ValueError(
-            f"Expected unique shape for 'label_to_rescale' data, got {shapes}"
+            f"Expected unique shape for 'label_to_rescale' data, got {shapes}",
         )
     ref_cube = cubes[0]
     ref_cube.attributes = {}
@@ -317,40 +317,40 @@ def get_emergent_constraint_data(cfg):
     """Get :class:`pandas.DataFrame` that contains the data."""
     input_data = _get_input_data(cfg)
     (features, labels, pred_input, pred_input_err) = _get_datasets_for_ec(
-        input_data
+        input_data,
     )
 
     # Extract data frames
     x_data = _get_data_frame(features, cfg["group_by_attributes"], "feature")
     y_data = _get_data_frame(labels, cfg["group_by_attributes"], "label")
     x_ref = _get_data_frame(
-        pred_input, cfg["group_by_attributes"], "prediction_input"
+        pred_input, cfg["group_by_attributes"], "prediction_input",
     )
     x_ref_err = _get_data_frame(
-        pred_input_err, cfg["group_by_attributes"], "prediction_input_error"
+        pred_input_err, cfg["group_by_attributes"], "prediction_input_error",
     )
 
     # Check data frames
     if len(x_data.index) < 2:
         raise ValueError(
             f"Expected at least two input points for X data, got "
-            f"{len(x_data.index):d}"
+            f"{len(x_data.index):d}",
         )
     if not x_data.index.equals(y_data.index):
         raise ValueError(
             f"Expected identical input points for X and Y data, got\nX: "
-            f"{x_data.index.values}\nY: {y_data.index.values}"
+            f"{x_data.index.values}\nY: {y_data.index.values}",
         )
     if len(x_ref.index) != 1:
         raise ValueError(
             f"Expected exactly one prediction input point for X data, got "
-            f"{len(x_ref.index):d}"
+            f"{len(x_ref.index):d}",
         )
     if not x_ref.index.equals(x_ref_err.index):
         raise ValueError(
             f"Expected identical input points for prediction input and its "
             f"corresponding errors for X data, got {x_ref.index.values} and "
-            f"{x_ref_err.index.values}, respectively"
+            f"{x_ref_err.index.values}, respectively",
         )
     logger.info("Found X data:\n%s", x_data)
     logger.info("Found Y data:\n%s", y_data)
@@ -363,14 +363,14 @@ def plot_emergent_relationship(cfg, x_data, y_data, x_ref, x_ref_err, y_mean):
     """Plot emergent relationship."""
     (feature, feature_units, label, label_units) = _get_tags(x_data, y_data)
     logger.info(
-        "Plotting emergent relationship between '%s' and '%s'", label, feature
+        "Plotting emergent relationship between '%s' and '%s'", label, feature,
     )
     (_, axes) = plt.subplots()
 
     # Plot data points
     for group in x_data.index:
         plot_kwargs = _get_plot_kwargs(
-            cfg, "plot_emergent_relationship", group=group
+            cfg, "plot_emergent_relationship", group=group,
         )
         plot_kwargs["linestyle"] = "none"
         plot_kwargs["label"] = group
@@ -380,7 +380,7 @@ def plot_emergent_relationship(cfg, x_data, y_data, x_ref, x_ref_err, y_mean):
     axes.set_xlim(auto=False)
     axes.set_ylim(auto=False)
     lines = ec.regression_line(
-        x_data.values.squeeze(), y_data.values.squeeze()
+        x_data.values.squeeze(), y_data.values.squeeze(),
     )
     lines["x"] = np.squeeze(lines["x"])
     axes.plot(
@@ -402,7 +402,7 @@ def plot_emergent_relationship(cfg, x_data, y_data, x_ref, x_ref_err, y_mean):
     x_ref = x_ref.values.squeeze()
     x_ref_err = x_ref_err.values.squeeze()
     axes.axvline(
-        x_ref, color="k", linestyle=":", label="Observational constraint"
+        x_ref, color="k", linestyle=":", label="Observational constraint",
     )
     axes.axvspan(x_ref - x_ref_err, x_ref + x_ref_err, color="k", alpha=0.1)
     axes.axhline(y_mean, color="k", linestyle=":")
@@ -447,7 +447,7 @@ def rescale_labels(cfg, y_data, y_mean, y_std):
     """Rescale labels."""
     input_data = _get_input_data(cfg)
     labels_to_rescale = select_metadata(
-        input_data, var_type="label_to_rescale"
+        input_data, var_type="label_to_rescale",
     )
     _check_datasets(labels_to_rescale, "label_to_rescale")
 
@@ -463,7 +463,7 @@ def rescale_labels(cfg, y_data, y_mean, y_std):
         raise ValueError(
             f"Expected identical groups for 'label' and 'label_to_rescale' "
             f"data, got\n'label': {y_data.index.values}\n'label_to_rescale': "
-            f"{np.array(groups)}"
+            f"{np.array(groups)}",
         )
 
     # Rescale data
@@ -486,16 +486,16 @@ def rescale_labels(cfg, y_data, y_mean, y_std):
         rescaled_dataset["rescaled"] = "using emergent relationship"
         if "_label" in dataset["filename"]:
             rescaled_dataset["filename"] = dataset["filename"].replace(
-                "_label_to_rescale", "_rescaled_label"
+                "_label_to_rescale", "_rescaled_label",
             )
         else:
             rescaled_dataset["filename"] = dataset["filename"].replace(
-                ".nc", "_rescaled_label.nc"
+                ".nc", "_rescaled_label.nc",
             )
 
         # Save data
         rescaled_dataset["filename"] = mlr.get_new_path(
-            cfg, rescaled_dataset["filename"]
+            cfg, rescaled_dataset["filename"],
         )
         io.metadata_to_netcdf(rescaled_cube, rescaled_dataset)
 
@@ -541,7 +541,7 @@ def main(cfg):
     cfg.setdefault("group_by_attributes", ["dataset"])
     cfg.setdefault("legend_kwargs", {})
     logger.info(
-        "Using attributes %s to group input data", cfg["group_by_attributes"]
+        "Using attributes %s to group input data", cfg["group_by_attributes"],
     )
 
     # Extract data
@@ -553,7 +553,7 @@ def main(cfg):
     # Plots
     if "plot_emergent_relationship" in cfg:
         plot_emergent_relationship(
-            cfg, x_data, y_data, x_ref, x_ref_err, y_mean
+            cfg, x_data, y_data, x_ref, x_ref_err, y_mean,
         )
 
     # Rescale labels

@@ -53,17 +53,17 @@ class GBRModel(MLRModel):
             zip(
                 self.features_after_preprocessing,
                 self._clf.feature_importances_,
-            )
+            ),
         )
         colors = self._get_colors_for_features(color_coded=color_coded)
 
         # Plot
         self._plot_feature_importance(
-            feature_importance_dict, colors, plot_path
+            feature_importance_dict, colors, plot_path,
         )
 
     def _plot_training_progress(
-        self, train_score, test_score=None, filename=None
+        self, train_score, test_score=None, filename=None,
     ):
         """Plot training progress during fitting."""
         if not self._is_ready_for_plotting():
@@ -79,7 +79,7 @@ class GBRModel(MLRModel):
 
         # Plot train score
         axes.plot(
-            x_values, train_score, color="b", linestyle="-", label="train data"
+            x_values, train_score, color="b", linestyle="-", label="train data",
         )
         x_values_all.append(x_values)
         scores_all.append(train_score)
@@ -129,7 +129,7 @@ class GBRModel(MLRModel):
             },
         )
         cube.add_aux_coord(
-            self._get_data_type_coord(np.concatenate(data_types)), 0
+            self._get_data_type_coord(np.concatenate(data_types)), 0,
         )
         self._write_plot_provenance(
             cube,

@@ -162,13 +162,13 @@ def get_grouped_data(cfg, input_data=None):
     if input_data is None:
         logger.debug("Loading input data from 'cfg' argument")
         input_data = mlr.get_input_data(
-            cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore")
+            cfg, pattern=cfg.get("pattern"), ignore=cfg.get("ignore"),
         )
     else:
         logger.debug("Loading input data from 'input_data' argument")
         if not mlr.datasets_have_mlr_attributes(input_data, log_level="error"):
             raise ValueError(
-                "At least one input dataset does not have valid MLR attributes"
+                "At least one input dataset does not have valid MLR attributes",
             )
     if not input_data:
         raise ValueError("No input data found")
@@ -181,7 +181,7 @@ def get_grouped_data(cfg, input_data=None):
     if not label_data:
         raise ValueError("No data with var_type 'label' found")
     prediction_reference_data = select_metadata(
-        input_data, var_type="prediction_reference"
+        input_data, var_type="prediction_reference",
     )
     extracted_data = label_data + prediction_reference_data
     logger.debug("Found 'label' data")
@@ -227,7 +227,7 @@ def get_reference_dataset(datasets, tag):
         filenames = [d["filename"] for d in ref_datasets]
         raise ValueError(
             f"Expected at most one 'prediction_reference' dataset for "
-            f"'{tag}', got {len(ref_datasets):d}:\n{pformat(filenames)}"
+            f"'{tag}', got {len(ref_datasets):d}:\n{pformat(filenames)}",
         )
     return (ref_datasets[0], ref_datasets[0].get("prediction_name"))
 
@@ -238,7 +238,7 @@ def get_residual_cube(mmm_cube, ref_cube):
         raise ValueError(
             f"Expected identical shapes for 'label' and "
             f"'prediction_reference' datasets, got {mmm_cube.shape} and "
-            f"{ref_cube.shape}, respectively"
+            f"{ref_cube.shape}, respectively",
         )
     res_cube = ref_cube.copy()
     res_cube.data -= mmm_cube.data
@@ -267,7 +267,7 @@ def save_error(cfg, label_datasets, mmm_path, **cube_attrs):
     else:
         raise NotImplementedError(
             f"mmm_error_type '{error_type}' is currently not supported, "
-            f"supported types are {allowed_error_types}"
+            f"supported types are {allowed_error_types}",
         )
     add_general_attributes(err_cube, **cube_attrs)
     err_path = mmm_path.replace("_prediction", "_squared_prediction_error")
@@ -291,7 +291,7 @@ def save_residuals(cfg, mmm_cube, ref_dataset, label_datasets, **cube_attrs):
     res_path = mmm_path.replace("_prediction", "_prediction_residual")
     io.iris_save(res_cube, res_path)
     ancestors = [d["filename"] for d in label_datasets] + [
-        ref_dataset["filename"]
+        ref_dataset["filename"],
     ]
     caption = (
         f"Residuals of predicted {res_cube.long_name} of MMM model "
@@ -321,7 +321,7 @@ def main(cfg, input_data=None, description=None):
     cfg.setdefault("dtype", "float64")
     cfg.setdefault("mlr_model_name", "MMM")
     cfg.setdefault(
-        "weighted_samples", {"area_weighted": True, "time_weighted": True}
+        "weighted_samples", {"area_weighted": True, "time_weighted": True},
     )
 
     # Get data
@@ -343,7 +343,7 @@ def main(cfg, input_data=None, description=None):
         mmm_cube = get_mmm_cube(cfg, label_datasets)
         add_general_attributes(mmm_cube, tag=tag, prediction_name=pred_name)
         mmm_path = get_diagnostic_filename(
-            f"mmm_{tag}_prediction{description}", cfg
+            f"mmm_{tag}_prediction{description}", cfg,
         )
         io.iris_save(mmm_cube, mmm_path)
         write_provenance(
