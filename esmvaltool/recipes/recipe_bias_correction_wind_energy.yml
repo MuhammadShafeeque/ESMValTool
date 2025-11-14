@@ -1,0 +1,526 @@
+# ESMValTool
+# recipe_bias_correction_wind_energy.yml
+# 
+# COMPREHENSIVE WORKFLOW: Bias Assessment → Bias Correction → Wind Energy Analysis
+# 
+# This recipe performs a complete workflow for bias-corrected wind energy analysis:
+# 1. Preprocessing and initial bias assessment (CMIP6 vs ERA5)
+# 2. Bias correction using multiple methods (QDM, EQM, DM, scaling)
+# 3. Wind capacity factor calculation from bias-corrected data
+#
+# FLEXIBLE CONFIGURATION:
+# - Choose any CMIP6 models (or use predefined lists)
+# - Flexible time periods (historical + SSP extensions)
+# - Multiple scenarios (ssp126, ssp245, ssp370, ssp585)
+# - Global or regional domains
+# - All bias correction methods available
+---
+documentation:
+  title: Bias Correction and Wind Energy Analysis Workflow
+  description: |
+    Integrated workflow for bias-correcting CMIP6 wind data using ERA5 as reference,
+    followed by wind capacity factor calculations.
+    
+    Workflow steps:
+    1. Load and preprocess CMIP6 models (historical + future) and ERA5 reanalysis
+    2. Calculate initial bias metrics (RMSD, MAE, spatial bias patterns)
+    3. Apply bias correction methods to CMIP6 data
+    4. Calculate wind capacity factors from bias-corrected data
+    5. Generate comprehensive visualizations and statistics
+
+  authors:
+    - mushaf001
+
+  maintainer:
+    - mushaf001
+
+  references:
+    - hersbach20rmets  # ERA5
+    - cannon2015climchange  # Quantile Delta Mapping
+
+  projects:
+    - bias_correction_wind_energy
+
+# ==============================================================================
+# CONFIGURATION SECTION - MODIFY THESE TO CUSTOMIZE YOUR WORKFLOW
+# ==============================================================================
+
+# Define your region of interest
+# Use predefined_regions OR custom_region (not both)
+predefined_regions: &predefined_regions
+  # Uncomment ONE region or use custom coordinates below:
+  global: &global_region
+    start_longitude: -180
+    end_longitude: 180
+    start_latitude: -90
+    end_latitude: 90
+  
+  # europe: &europe_region
+  #   start_longitude: -20
+  #   end_longitude: 60
+  #   start_latitude: 30
+  #   end_latitude: 80
+  
+  # north_america: &north_america_region
+  #   start_longitude: -170
+  #   end_longitude: -50
+  #   start_latitude: 20
+  #   end_latitude: 75
+  
+  # asia_pacific: &asia_pacific_region
+  #   start_longitude: 60
+  #   end_longitude: 180
+  #   start_latitude: -10
+  #   end_latitude: 60
+
+# ACTIVE REGION - Choose which region to use:
+active_region: *global_region
+
+# TIME PERIODS CONFIGURATION
+time_periods: &time_periods
+  # Historical calibration period for bias correction
+  historical_start: 1985
+  historical_end: 2014
+  
+  # Future projection periods (can define multiple)
+  future_periods:
+    near_term:
+      start: 2021
+      end: 2050
+    mid_term:
+      start: 2041
+      end: 2070
+    long_term:
+      start: 2071
+      end: 2100
+
+# ==============================================================================
+# CMIP6 MODELS CONFIGURATION
+# ==============================================================================
+
+# Option 1: Use ALL available CMIP6 models (uncomment to use)
+# Note: This will use all models with available data - may be very large!
+# cmip6_models_option: "ALL"
+
+# Option 2: Use a predefined subset of well-performing models (RECOMMENDED)
+# Option 3: Define your own custom list below
+
+cmip6_models_subset: &cmip6_models_historical
+  # High-performing CMIP6 models for wind analysis
+  # Uncomment/add models as needed
+  - {dataset: ACCESS-CM2, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: ACCESS-ESM1-5, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: BCC-CSM2-MR, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: CESM2, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: CESM2-WACCM, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: CMCC-CM2-SR5, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: CNRM-CM6-1, ensemble: r1i1p1f2, grid: gr}
+  - {dataset: CNRM-ESM2-1, ensemble: r1i1p1f2, grid: gr}
+  - {dataset: CanESM5, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: EC-Earth3, ensemble: r1i1p1f1, grid: gr}
+  - {dataset: EC-Earth3-Veg, ensemble: r1i1p1f1, grid: gr}
+  - {dataset: FGOALS-g3, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: GFDL-ESM4, ensemble: r1i1p1f1, grid: gr1}
+  - {dataset: GISS-E2-1-G, ensemble: r1i1p1f2, grid: gn}
+  - {dataset: HadGEM3-GC31-LL, ensemble: r1i1p1f3, grid: gn}
+  - {dataset: INM-CM4-8, ensemble: r1i1p1f1, grid: gr1}
+  - {dataset: INM-CM5-0, ensemble: r1i1p1f1, grid: gr1}
+  - {dataset: IPSL-CM6A-LR, ensemble: r1i1p1f1, grid: gr}
+  - {dataset: MIROC6, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: MIROC-ES2L, ensemble: r1i1p1f2, grid: gn}
+  - {dataset: MPI-ESM1-2-HR, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: MPI-ESM1-2-LR, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: MRI-ESM2-0, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: NESM3, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: NorESM2-LM, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: NorESM2-MM, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: TaiESM1, ensemble: r1i1p1f1, grid: gn}
+  - {dataset: UKESM1-0-LL, ensemble: r1i1p1f2, grid: gn}
+
+# SSP Scenarios - Select which scenarios to process
+# Uncomment the scenarios you want to analyze
+active_scenarios: &active_scenarios
+  - ssp126
+  - ssp245
+  # - ssp370
+  - ssp585
+
+# ==============================================================================
+# PREPROCESSORS
+# ==============================================================================
+
+preprocessors:
+  # Preprocessor for historical period (for bias correction calibration)
+  preproc_historical_daily:
+    extract_time:
+      start_year: 1985
+      start_month: 1
+      start_day: 1
+      end_year: 2014
+      end_month: 12
+      end_day: 31
+    extract_region:
+      <<: *active_region
+    regrid:
+      target_grid: 2x2
+      scheme: linear
+    mask_landsea:
+      mask_out: sea  # Wind energy focuses on onshore/offshore separately
+
+  # Preprocessor for future periods
+  preproc_future_near_daily:
+    extract_time:
+      start_year: 2021
+      start_month: 1
+      start_day: 1
+      end_year: 2050
+      end_month: 12
+      end_day: 31
+    extract_region:
+      <<: *active_region
+    regrid:
+      target_grid: 2x2
+      scheme: linear
+    mask_landsea:
+      mask_out: sea
+
+  preproc_future_mid_daily:
+    extract_time:
+      start_year: 2041
+      start_month: 1
+      start_day: 1
+      end_year: 2070
+      end_month: 12
+      end_day: 31
+    extract_region:
+      <<: *active_region
+    regrid:
+      target_grid: 2x2
+      scheme: linear
+    mask_landsea:
+      mask_out: sea
+
+  preproc_future_long_daily:
+    extract_time:
+      start_year: 2071
+      start_month: 1
+      start_day: 1
+      end_year: 2100
+      end_month: 12
+      end_day: 31
+    extract_region:
+      <<: *active_region
+    regrid:
+      target_grid: 2x2
+      scheme: linear
+    mask_landsea:
+      mask_out: sea
+
+  # Preprocessor for bias assessment (monthly for statistics)
+  preproc_bias_assessment:
+    monthly_statistics:
+      operator: mean
+    extract_time:
+      start_year: 1985
+      start_month: 1
+      start_day: 1
+      end_year: 2014
+      end_month: 12
+      end_day: 31
+    extract_region:
+      <<: *active_region
+    regrid:
+      target_grid: 2x2
+      scheme: linear
+    mask_landsea:
+      mask_out: sea
+
+# ==============================================================================
+# DIAGNOSTICS
+# ==============================================================================
+
+diagnostics:
+
+  # ============================================================================
+  # DIAGNOSTIC 1: Initial Bias Assessment
+  # ============================================================================
+  bias_assessment:
+    description: |
+      Calculate initial bias metrics between CMIP6 models and ERA5 reanalysis.
+      Outputs: RMSD, MAE, spatial bias patterns, Taylor diagrams
+    
+    variables:
+      sfcWind:
+        preprocessor: preproc_bias_assessment
+        project: CMIP6
+        mip: day
+        exp: historical
+        start_year: 1985
+        end_year: 2014
+        reference_dataset: ERA5
+        additional_datasets: *cmip6_models_historical
+    
+    additional_datasets:
+      - {dataset: ERA5, project: native6, type: reanaly, version: v1, tier: 3,
+         start_year: 1985, end_year: 2014}
+    
+    scripts:
+      calculate_bias:
+        script: bias_correction/bias_assessment.py
+        # Output comprehensive bias statistics
+        metrics:
+          - rmsd
+          - mae
+          - bias
+          - correlation
+        plot_spatial_bias: true
+        plot_taylor_diagram: true
+        plot_bias_histogram: true
+
+  # ============================================================================
+  # DIAGNOSTIC 2: Bias Correction
+  # ============================================================================
+  bias_correction_historical:
+    description: |
+      Apply bias correction to CMIP6 historical wind data using ERA5 as reference.
+      Methods: QDM (Quantile Delta Mapping), EQM (Empirical Quantile Mapping),
+               DM (Delta Method), Scaling
+    
+    variables:
+      sfcWind:
+        preprocessor: preproc_historical_daily
+        project: CMIP6
+        mip: day
+        exp: historical
+        start_year: 1985
+        end_year: 2014
+        reference_dataset: ERA5
+        additional_datasets: *cmip6_models_historical
+    
+    additional_datasets:
+      - {dataset: ERA5, project: native6, type: reanaly, version: v1, tier: 3,
+         start_year: 1985, end_year: 2014}
+    
+    scripts:
+      apply_bias_correction:
+        script: bias_correction/bias_correction.py
+        
+        # BIAS CORRECTION METHOD - Choose ONE or set to 'all' to run all methods
+        # Options: 'qdm', 'eqm', 'delta_method', 'scaling', 'all'
+        correction_method: all
+        
+        # Method-specific parameters
+        quantile_method: 'qdm'  # For quantile mapping: 'qdm' or 'eqm'
+        n_quantiles: 50  # Number of quantiles for mapping (higher = more precise)
+        
+        # Grouping for bias correction
+        group_by: 'time.month'  # Apply correction separately for each month
+        
+        # Output options
+        save_corrected_data: true
+        plot_correction_comparison: true
+        calculate_validation_metrics: true
+
+  # Future scenarios bias correction - SSP245 Near-term
+  bias_correction_ssp245_near:
+    description: Apply bias correction to SSP245 scenario (2021-2050)
+    
+    variables:
+      sfcWind:
+        preprocessor: preproc_future_near_daily
+        project: CMIP6
+        mip: day
+        exp: ssp245
+        start_year: 2021
+        end_year: 2050
+        additional_datasets: *cmip6_models_historical
+    
+    scripts:
+      apply_bias_correction:
+        script: bias_correction/bias_correction.py
+        correction_method: qdm  # Use QDM for future projections
+        n_quantiles: 50
+        group_by: 'time.month'
+        save_corrected_data: true
+        # Reference the historical calibration from diagnostic 1
+        use_historical_calibration: true
+        ancestors: ['bias_correction_historical/apply_bias_correction']
+
+  # Future scenarios bias correction - SSP245 Mid-term
+  bias_correction_ssp245_mid:
+    description: Apply bias correction to SSP245 scenario (2041-2070)
+    
+    variables:
+      sfcWind:
+        preprocessor: preproc_future_mid_daily
+        project: CMIP6
+        mip: day
+        exp: ssp245
+        start_year: 2041
+        end_year: 2070
+        additional_datasets: *cmip6_models_historical
+    
+    scripts:
+      apply_bias_correction:
+        script: bias_correction/bias_correction.py
+        correction_method: qdm
+        n_quantiles: 50
+        group_by: 'time.month'
+        save_corrected_data: true
+        use_historical_calibration: true
+        ancestors: ['bias_correction_historical/apply_bias_correction']
+
+  # Future scenarios bias correction - SSP245 Long-term
+  bias_correction_ssp245_long:
+    description: Apply bias correction to SSP245 scenario (2071-2100)
+    
+    variables:
+      sfcWind:
+        preprocessor: preproc_future_long_daily
+        project: CMIP6
+        mip: day
+        exp: ssp245
+        start_year: 2071
+        end_year: 2100
+        additional_datasets: *cmip6_models_historical
+    
+    scripts:
+      apply_bias_correction:
+        script: bias_correction/bias_correction.py
+        correction_method: qdm
+        n_quantiles: 50
+        group_by: 'time.month'
+        save_corrected_data: true
+        use_historical_calibration: true
+        ancestors: ['bias_correction_historical/apply_bias_correction']
+
+  # ============================================================================
+  # DIAGNOSTIC 3: Wind Energy Capacity Factor (Bias-Corrected Data)
+  # ============================================================================
+  wind_capacity_factor_corrected_near:
+    description: |
+      Calculate wind capacity factor from bias-corrected data (2021-2050).
+      Uses standard IEC turbine classes.
+    
+    variables:
+      sfcWind:
+        mip: day
+        # This will use the bias-corrected output from previous diagnostic
+        derive: true
+        force_derivation: false
+    
+    scripts:
+      capacity_factor:
+        script: bias_correction/wind_capacity_factor.py
+        
+        # Turbine specifications (IEC classes)
+        turbines:
+          - name: "IEC_Class_I"
+            hub_height: 100
+            rated_power: 2.0  # MW
+            cut_in_speed: 3.0
+            rated_speed: 15.0
+            cut_out_speed: 25.0
+          - name: "IEC_Class_II"
+            hub_height: 100
+            rated_power: 2.0
+            cut_in_speed: 3.0
+            rated_speed: 12.5
+            cut_out_speed: 25.0
+          - name: "IEC_Class_III"
+            hub_height: 100
+            rated_power: 2.0
+            cut_in_speed: 3.0
+            rated_speed: 10.0
+            cut_out_speed: 25.0
+        
+        # Analysis options
+        calculate_seasonal_cf: true
+        calculate_monthly_cf: true
+        plot_capacity_factor_maps: true
+        plot_time_series: true
+        
+        # Use bias-corrected data as input
+        use_corrected_data: true
+        corrected_data_source: 'bias_correction_ssp245_near/apply_bias_correction'
+
+  # Capacity factor for mid-term
+  wind_capacity_factor_corrected_mid:
+    description: Calculate wind capacity factor from bias-corrected data (2041-2070)
+    
+    variables:
+      sfcWind:
+        mip: day
+        derive: true
+    
+    scripts:
+      capacity_factor:
+        script: bias_correction/wind_capacity_factor.py
+        turbines:
+          - name: "IEC_Class_II"
+            hub_height: 100
+            rated_power: 2.0
+            cut_in_speed: 3.0
+            rated_speed: 12.5
+            cut_out_speed: 25.0
+        calculate_seasonal_cf: true
+        plot_capacity_factor_maps: true
+        use_corrected_data: true
+        corrected_data_source: 'bias_correction_ssp245_mid/apply_bias_correction'
+
+  # Capacity factor for long-term
+  wind_capacity_factor_corrected_long:
+    description: Calculate wind capacity factor from bias-corrected data (2071-2100)
+    
+    variables:
+      sfcWind:
+        mip: day
+        derive: true
+    
+    scripts:
+      capacity_factor:
+        script: bias_correction/wind_capacity_factor.py
+        turbines:
+          - name: "IEC_Class_II"
+            hub_height: 100
+            rated_power: 2.0
+            cut_in_speed: 3.0
+            rated_speed: 12.5
+            cut_out_speed: 25.0
+        calculate_seasonal_cf: true
+        plot_capacity_factor_maps: true
+        use_corrected_data: true
+        corrected_data_source: 'bias_correction_ssp245_long/apply_bias_correction'
+
+  # ============================================================================
+  # DIAGNOSTIC 4: Comparative Analysis
+  # ============================================================================
+  comparison_analysis:
+    description: |
+      Compare wind capacity factors before and after bias correction.
+      Assess the impact of bias correction on wind energy indicators.
+    
+    scripts:
+      compare_results:
+        script: bias_correction/comparison_analysis.py
+        
+        # Compare these diagnostics
+        compare_periods:
+          - historical
+          - near_term
+          - mid_term
+          - long_term
+        
+        # Generate comprehensive comparison plots
+        plot_difference_maps: true
+        plot_improvement_metrics: true
+        plot_multi_model_ensemble: true
+        
+        # Calculate change signals
+        calculate_climate_change_signal: true
+        reference_period: [1985, 2014]
+        future_periods:
+          - [2021, 2050]
+          - [2041, 2070]
+          - [2071, 2100]
+

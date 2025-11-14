@@ -1,0 +1,32 @@
+# Requirements for Bias Correction and Wind Energy Analysis
+# Install with: pip install -r requirements_bias_correction.txt
+
+# Core scientific libraries (usually already available in ESMValTool)
+numpy>=1.20.0
+scipy>=1.7.0
+xarray>=0.19.0
+pandas>=1.3.0
+
+# Bias correction specific packages
+xclim>=0.38.0  # Comprehensive climate indicators library with bias correction
+python-cmethods>=1.0.0  # Climate model correction methods
+ibicus>=0.4.0  # Another bias correction package (optional)
+
+# For advanced quantile mapping
+scikit-learn>=0.24.0
+
+# Plotting (usually available)
+matplotlib>=3.4.0
+cartopy>=0.20.0
+seaborn>=0.11.0
+
+# For Taylor diagrams (optional)
+skill-metrics>=1.0.0
+
+# NetCDF handling (usually available)
+netCDF4>=1.5.0
+iris>=3.0.0
+
+# Parallel processing (optional, for large datasets)
+dask>=2021.0.0
+

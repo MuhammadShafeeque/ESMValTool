@@ -1,0 +1,136 @@
+# ESMValTool Configuration Example for Bias Correction Workflow
+#
+# Copy this file to ~/.esmvaltool/config-user.yml and customize
+# Or specify with: esmvaltool run --config_file=config_bias_correction_example.yml recipe.yml
+
+---
+# Output directories
+output_dir: ~/esmvaltool_output  # Main output directory
+auxiliary_data_dir: ~/esmvaltool_auxiliary_data  # Auxiliary data (will be created)
+# Where to store downloaded climate data (if using automatic download)
+download_dir: ~/esmvaltool_climate_data
+
+# Root paths for different data sources
+# Customize these to point to your data locations
+rootpath:
+  # CMIP6 data location
+  CMIP6: /path/to/cmip6/data  # e.g., /data/cmip6/CMIP6
+  
+  # ERA5 native format data
+  native6: /path/to/era5/data  # e.g., /data/reanalysis/ERA5
+  
+  # Observational data
+  OBS6: /path/to/obs/data
+  
+  # Default location for other data
+  default: /path/to/climate/data
+
+# DRS (Data Reference Syntax) for different projects
+drs:
+  CMIP6: ESGF  # or DKRZ, BADC, etc.
+  native6: default
+
+# Logging level (debug, info, warning, error)
+log_level: info
+
+# Number of parallel tasks for preprocessing
+# Adjust based on available CPUs and memory
+max_parallel_tasks: 4
+
+# Remove intermediate preprocessing files after completion
+remove_preproc_dir: false  # Set to true to save disk space
+
+# Output file types for plots
+output_file_type: png  # Options: png, pdf, ps, eps, svg
+
+# Compression level for NetCDF output (1-9, 9 = maximum compression)
+compress_netcdf: true
+compress_level: 4
+
+# Profile diagnostic scripts (for performance optimization)
+profile_diagnostic: false
+
+# Exit on warning
+exit_on_warning: false
+
+# Additional settings for HPC environments
+# ---------------------------------------
+
+# Path to additional diagnostic scripts (optional)
+# diagnostics: ~/custom_diagnostics
+
+# Path to additional preprocessor functions (optional)  
+# preprocessor_functions: ~/custom_preprocessors
+
+# Path to custom CMOR tables (if needed)
+# cmor_tables: ~/custom_cmor_tables
+
+# Memory limit per task (in MB) - helps prevent out-of-memory errors
+# max_memory_per_task: 16000
+
+# Use Dask for parallel processing (experimental)
+# dask:
+#   client: distributed  # or 'local'
+#   scheduler_address: tcp://scheduler:8786  # for distributed
+#   n_workers: 8
+#   threads_per_worker: 2
+#   memory_limit: 16GB
+
+# Configuration for specific bias correction workflow
+# ---------------------------------------------------
+
+# Custom configuration can be added here and accessed in diagnostic scripts
+bias_correction:
+  # Default bias correction method
+  default_method: qdm
+  
+  # Number of quantiles for quantile mapping
+  n_quantiles: 50
+  
+  # Temporal grouping for correction
+  group_by: time.month  # Options: time.month, time.season, time.dayofyear
+  
+  # Validation options
+  calculate_validation_metrics: true
+  create_validation_plots: true
+  
+  # Wind energy specific settings
+  wind_energy:
+    default_hub_height: 100  # meters
+    default_turbine_class: IEC_Class_II
+    
+    # Standard IEC turbine parameters
+    turbine_specs:
+      IEC_Class_I:
+        cut_in: 3.0
+        rated: 15.0
+        cut_out: 25.0
+      IEC_Class_II:
+        cut_in: 3.0
+        rated: 12.5
+        cut_out: 25.0
+      IEC_Class_III:
+        cut_in: 3.0
+        rated: 10.0
+        cut_out: 25.0
+
+# Search paths for additional configuration files
+# search_esgf: when  # Options: when (search if local data not found), never, always
+
+# If you want to use a different Python interpreter for diagnostics
+# python: /path/to/custom/python
+
+# Matplotlib backend (for headless HPC systems)
+# matplotlib_backend: Agg
+
+# Example HPC-optimized settings
+# --------------------------------
+# For running on an HPC cluster, you might want:
+#
+# max_parallel_tasks: 8  # Match number of allocated CPUs
+# remove_preproc_dir: true  # Save disk space
+# log_level: info  # Reduce log verbosity
+# output_file_type: png  # Faster than PDF
+# compress_netcdf: true  # Save disk space
+# compress_level: 6  # Good balance of speed/compression
+
